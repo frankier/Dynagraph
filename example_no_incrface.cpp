@@ -41,7 +41,7 @@ void main() {
 	cout << "step 1" << endl;
 	printChanges(queue);
 	queue.Okay(true);
-	igd<Update>(queue.client) = 0;
+	ModifyFlags(queue) = 0;
 	
 
 	Layout::Edge *e = layout.create_edge(m,n).first;
@@ -52,16 +52,16 @@ void main() {
 	cout << "step 2" << endl;
 	printChanges(queue);
 	queue.Okay(true);
-	igd<Update>(queue.client) = 0;
+	ModifyFlags(queue) = 0;
 
 	gd<NodeGeom>(n).pos = Coord(5,5);
-	queue.ModNode(n,DG_UPD_MOVE);
+	ModifyNode(queue,n,DG_UPD_MOVE);
 
 	server->Process(queue);
 	cout << "step 3" << endl;
 	printChanges(queue);
 	queue.Okay(true);
-	igd<Update>(queue.client) = 0;
+	ModifyFlags(queue) = 0;
 
 	queue.DelNode(n);
 
@@ -69,5 +69,5 @@ void main() {
 	cout << "step 4" << endl;
 	printChanges(queue);
 	queue.Okay(true);
-	igd<Update>(queue.client) = 0;
+	ModifyFlags(queue) = 0;
 }

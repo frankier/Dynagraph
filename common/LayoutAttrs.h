@@ -27,7 +27,7 @@
 namespace Dynagraph {
 
 /*
-        UPDATE flags. use with ChangeQueue::ModNode,ModEdge to set this
+    UPDATE flags. use with ChangeQueue::ModNode,ModEdge to set this
 	modify subgraph specific flag.
 	(this update flag is a poor use for instance-specific data, because the data
 	is unused in the other subgraphs)
@@ -53,6 +53,18 @@ typedef enum {
 struct Update { // subgraph-specific datum
 	unsigned flags;
 	Update(unsigned flags = 0) : flags(flags) {}
+	Update operator |(const Update &other) {
+		return Update(flags|other.flags);
+	}
+	Update operator &(const Update &other) {
+		return Update(flags&other.flags);
+	}
+	Update operator |=(const Update &other) {
+		return *this = *this|other;
+	}
+	Update operator &=(const Update &other) {
+		return *this = *this&other;
+	}
 };
 
 /*

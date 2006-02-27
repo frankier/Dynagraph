@@ -14,7 +14,21 @@
 *                   http://dynagraph.org                  *
 **********************************************************/
 
+namespace Dynagraph {
 
-#include <math.h>
-#include "ObAvSplinerEngine.h"
+template<typename Layout>
+inline void ModifyNode(ChangeQueue<Layout> &Q,typename Layout::Node *n,Update upd) {
+	if(typename Layout::Node *n2 = Q.ModNode(n))
+		igd<Update>(n2) |= upd;
+}
+template<typename Layout>
+inline void ModifyEdge(ChangeQueue<Layout> &Q,typename Layout::Edge *e,Update upd) {
+	if(typename Layout::Edge *e2 = Q.ModEdge(e))
+		igd<Update>(e2) |= upd;
+}
+template<typename Layout>
+inline Update &ModifyFlags(ChangeQueue<Layout> &Q) {
+	return igd<Update>(&Q.modN);
+}
 
+} // namespace Dynagraph

@@ -53,17 +53,15 @@ struct ChangeQueue {
 			throw InsertInserted();
 		insE.insert(e);
 	}
-	void ModNode(typename Graph::Node *n,Update u) {
-		if(!insN.find(n) && !delN.find(n)) { // u.flags &&
-			typename Graph::Node *n2 = modN.insert(n).first;
-			igd<Update>(n2).flags |= u.flags;
-		}
+	typename Graph::Node *ModNode(typename Graph::Node *n) {
+		if(!insN.find(n) && !delN.find(n)) 
+			return modN.insert(n).first;
+		return 0;
 	}
-	void ModEdge(typename Graph::Edge *e,Update u) {
-		if(!insE.find(e) && !delE.find(e)) { // u.flags &&
-			typename Graph::Edge *e2 = modE.insert(e).first;
-			igd<Update>(e2).flags |= u.flags;
-		}
+	typename Graph::Edge *ModEdge(typename Graph::Edge *e) {
+		if(!insE.find(e) && !delE.find(e)) 
+			return modE.insert(e).first;
+		return 0;
 	}
 	void DelNode(typename Graph::Node *n) {
 		insN.erase(n);
@@ -80,8 +78,6 @@ struct ChangeQueue {
 		delE.insert(e);
 	}
 
-	unsigned &GraphUpdateFlags() { return igd<Update>(&modN).flags; }
-
 	// called by server to update current subgraph based on current changes
 	void UpdateCurrent();
 
@@ -89,12 +85,12 @@ struct ChangeQueue {
 	void Okay(bool doDelete = false);
 
 	bool Empty() { return insN.nodes().empty()&&modN.nodes().empty()&&delN.nodes().empty()&&
-		insE.nodes().empty()&&modE.nodes().empty()&&delE.nodes().empty()&&GraphUpdateFlags()==0; }
+		insE.nodes().empty()&&modE.nodes().empty()&&delE.nodes().empty(); }
 
 	// copy
 	ChangeQueue &operator=(ChangeQueue &Q);
 	// accumulate
-	//ChangeQueue &operator+=(ChangeQueue &Q);
+	ChangeQueue &operator+=(ChangeQueue &Q);
 
 	// Exceptions
 
@@ -176,7 +172,6 @@ ChangeQueue<Graph> &ChangeQueue<Graph>::operator=(ChangeQueue<Graph> &Q) {
 	client->idat = Q.client->idat; 
 	return *this;
 }
-/*
 template<typename Graph>
 ChangeQueue<Graph> &ChangeQueue<Graph>::operator+=(ChangeQueue<Graph> &Q) {
 	assert(client==Q.client);
@@ -186,10 +181,10 @@ ChangeQueue<Graph> &ChangeQueue<Graph>::operator+=(ChangeQueue<Graph> &Q) {
 		InsNode(*ni);
 	for(ei = Q.insE.edges().begin(); ei!=Q.insE.edges().end(); ++ei)
 		InsEdge(*ei);
-	for(ni = Q.modN.nodes().begin(); ni!=Q.modN.nodes().end(); ++ni)
-		ModNode(*ni,igd<Update>(*ni));
+	for(ni = Q.modN.nodes().begin(); ni!=Q.modN.nodes().end(); ++ni) 
+		ModNode(*ni)->idat = (*ni)->idat;
 	for(ei = Q.modE.edges().begin(); ei!=Q.modE.edges().end(); ++ei)
-		ModEdge(*ei,igd<Update>(*ei));
+		ModEdge(*ei)->idat = (*ei)->idat;
 	for(ni = Q.delN.nodes().begin(); ni!=Q.delN.nodes().end(); ++ni)
 		DelNode(*ni);
 	for(ei = Q.delE.edges().begin(); ei!=Q.delE.edges().end(); ++ei)
@@ -197,7 +192,6 @@ ChangeQueue<Graph> &ChangeQueue<Graph>::operator+=(ChangeQueue<Graph> &Q) {
 	GraphUpdateFlags() |= Q.GraphUpdateFlags();
 	return *this;
 }
-*/
 
 } // namespace Dynagraph
 

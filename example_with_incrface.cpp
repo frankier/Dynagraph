@@ -40,7 +40,7 @@ struct EgzamplView : DynaView {
 			cout << "edge " << gd<Name>(*ei) << " deleted" << endl;
 		// IMPORTANT: Okay must be called within IncrHappened
 		Q.Okay(true);
-		igd<Update>(Q.client) = 0;
+		ModifyFlags(Q) = 0;
 	}
 	void IncrNewNode(Layout::Node *n) {}
 	void IncrNewEdge(Layout::Edge *e) {}
@@ -115,7 +115,7 @@ void main() {
 	// (modify)
 	Layout::Node *m = dynaview->getNode("m",false).first;
 	gd<NodeGeom>(m).pos = Coord(5,5);
-	dynaview->Q.ModNode(m,DG_UPD_MOVE);
+	igd<Update>(dynaview->Q.ModNode(m)) |= DG_UPD_MOVE;
 	dynaview->maybe_go();
 	// (create node)
 	cout << "step 2b" << endl;

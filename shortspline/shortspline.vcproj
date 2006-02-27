@@ -140,9 +140,6 @@
 			<File
 				RelativePath="legal_arrangement.c">
 			</File>
-			<File
-				RelativePath="ObAvSplinerEngine.cpp">
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"

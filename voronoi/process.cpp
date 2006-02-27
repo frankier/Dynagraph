@@ -367,7 +367,7 @@ sAdjust ()
 void VoronoiServer::updateLayout(ChangeQueue<FDPLayout> &Q) {
     for(vector<Info>::iterator ii = infos.nodes.begin(); ii!=infos.nodes.end(); ++ii) {
 		gd<NodeGeom>(ii->layoutN).pos = ii->site.coord;
-		Q.ModNode(ii->layoutN,DG_UPD_MOVE);
+		ModifyNode(Q,ii->layoutN,DG_UPD_MOVE);
 	}
 }
 /*

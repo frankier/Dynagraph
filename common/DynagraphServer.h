@@ -17,6 +17,8 @@
 #ifndef DynagraphServer_h
 #define DynagraphServer_h
 
+#include "Modify.h"
+
 namespace Dynagraph {
 
 template<typename Layout>

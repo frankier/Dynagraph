@@ -42,10 +42,10 @@ inline void post_engine_replacement(ChangeQueue &Q,Layout &oldCurrent) {
     // (although there may be other changes)
     for(Layout::node_iter ni = oldCurrent.nodes().begin(); ni!=oldCurrent.nodes().end(); ++ni)
         if(Q.insN.erase(*ni)) // else it got deleted after the engine was replaced
-			Q.ModNode(*ni,DG_UPD_MOVE);
+			ModifyNode(Q,*ni,DG_UPD_MOVE);
     for(Layout::graphedge_iter ei = oldCurrent.edges().begin(); ei!=oldCurrent.edges().end(); ++ei) {
         if(Q.insE.erase(*ei))
-			Q.ModEdge(*ei,DG_UPD_MOVE);
+			ModifyEdge(Q,*ei,DG_UPD_MOVE);
     }
 	oldCurrent.clear();
 }

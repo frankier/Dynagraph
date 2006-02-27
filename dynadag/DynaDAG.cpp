@@ -184,7 +184,7 @@ void DynaDAGServer::updateBounds(DDChangeQueue &changeQ) {
   }
   if(gd<GraphGeom>(current).bounds != bb) {
     gd<GraphGeom>(current).bounds = bb;
-    changeQ.GraphUpdateFlags() |= DG_UPD_BOUNDS;
+    igd<Update>(changeQ.client) |= DG_UPD_BOUNDS;
   }
 }
 void DynaDAGServer::findChangedNodes(DDChangeQueue &changeQ) {
@@ -203,7 +203,7 @@ void DynaDAGServer::findChangedNodes(DDChangeQueue &changeQ) {
 					++nmoves;
 				}
 				p = pos;
-				changeQ.ModNode(*ni,DG_UPD_MOVE);
+				ModifyNode(changeQ,*ni,DG_UPD_MOVE);
 			}
 		}
 	}
@@ -367,7 +367,7 @@ void DynaDAGServer::redrawEdges(DDChangeQueue &changeQ,bool force) {
 				sketchEdge(DDp(*ei));
 		}
 		if(before!=gd<EdgeGeom>(*ei).pos)
-			changeQ.ModEdge(*ei,DG_UPD_MOVE);
+			ModifyEdge(changeQ,*ei,DG_UPD_MOVE);
 	}
 	for(ei = current->edges().begin(); ei!=current->edges().end(); ++ei)
 		if(DDp(*ei)->secondOfTwo) {
@@ -376,7 +376,7 @@ void DynaDAGServer::redrawEdges(DDChangeQueue &changeQ,bool force) {
 			gd<EdgeGeom>(*ei).pos.assign(otherSide.rbegin(),otherSide.rend());
 			gd<EdgeGeom>(*ei).pos.degree = otherSide.degree;
 			if(before!=gd<EdgeGeom>(*ei).pos)
-				changeQ.ModEdge(*ei,DG_UPD_MOVE);
+				ModifyEdge(changeQ,*ei,DG_UPD_MOVE);
 		}
 }
 void DynaDAGServer::cleanUp() { // dd_postprocess
@@ -454,13 +454,13 @@ void DynaDAGServer::Process(DDChangeQueue &changeQ) {
 	
 	findFlowSlopes(changeQ);
 
-	redrawEdges(changeQ,changeQ.GraphUpdateFlags()&DG_UPD_EDGESTYLE);
+	redrawEdges(changeQ,igd<Update>(changeQ.client).flags&DG_UPD_EDGESTYLE);
 	timer.LoopPoint(r_timing,"draw splines");
 
 	// restore the edges that were re-inserted because secondOfTwo was reset
 	for(DynaDAGLayout::graphedge_iter ei = extraI.edges().begin(); ei!=extraI.edges().end(); ++ei) {
 		assert(changeQ.insE.erase(*ei));
-		changeQ.ModEdge(*ei,DG_UPD_MOVE);
+		ModifyEdge(changeQ,*ei,DG_UPD_MOVE);
 	}
 
 

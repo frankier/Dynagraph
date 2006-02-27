@@ -213,7 +213,7 @@ Update stringsIn(Transform *trans,typename Layout::Node *n,const StrAttrs &attrs
 			ret.flags |= DG_UPD_POLYDEF;
 		}
 	}
-	return ret.flags;
+	return ret;
 }
 template<typename Layout>
 Update stringsIn(Transform *trans,typename Layout::Edge *e,const StrAttrs &attrs,bool clearOld) {

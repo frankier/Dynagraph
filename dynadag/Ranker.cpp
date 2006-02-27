@@ -312,10 +312,10 @@ void Ranker::recomputeRanks(DDChangeQueue &changeQ) {
 		if(newTopRank != mn->oldTopRank || newBottomRank != mn->oldBottomRank) {
 			mn->newTopRank = newTopRank;
 			mn->newBottomRank = newBottomRank;
-			changeQ.ModNode(n,DG_UPD_MOVE);
+			ModifyNode(changeQ,n,DG_UPD_MOVE);
 			DynaDAGLayout::Node *cn = config.current->find(n);
 			for(DynaDAGLayout::nodeedge_iter ei=cn->alledges().begin(); ei!=cn->alledges().end(); ++ei)
-				changeQ.ModEdge(*ei,DG_UPD_MOVE);
+				ModifyEdge(changeQ,*ei,DG_UPD_MOVE);
 		}
 	}
 }

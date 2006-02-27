@@ -54,7 +54,7 @@ void ShapeGenerator<Layout>::Process(ChangeQueue<Layout> &Q) {
 			ng.region.shape.degree = biggest.degree;
 		}
 		ng.region.updateBounds();
-		Q.ModNode(n,DG_UPD_REGION|DG_UPD_DRAWN);
+		ModifyNode(Q,n,DG_UPD_REGION|DG_UPD_DRAWN);
       }
     }
 }

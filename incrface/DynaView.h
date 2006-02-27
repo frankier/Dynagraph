@@ -293,7 +293,7 @@ Update DynaView<Layout>::open_layout(const StrAttrs &attrs) {
             if(ai->second!=gd<StrAttrs>(&current)["engines"])
                 create = true;
     }
-    Update ret = stringsIn(m_transform,m_useDotDefaults,&layout,attrs,false).flags;
+    Update ret = stringsIn(m_transform,m_useDotDefaults,&layout,attrs,false);
     if(create)
         createServer();
     return ret;
@@ -323,7 +323,7 @@ bool DynaView<Layout>::incr_ev_close_graph() {
 }
 template<typename Layout>
 bool DynaView<Layout>::incr_ev_mod_graph(const StrAttrs &attrs) {
-    Q.GraphUpdateFlags() |= open_layout(attrs).flags;
+    igd<Update>(Q.client) |= open_layout(attrs);
     maybe_go();
     return true;
 }
@@ -354,22 +354,10 @@ DString DynaView<Layout>::incr_ev_ins_node(DString name, const StrAttrs &attrs, 
         Q.InsNode(nb.first);
         IncrNewNode(nb.first);
     }
-    else
-        Q.ModNode(nb.first,upd);
+	else 
+        ModifyNode(Q,nb.first,upd);
     maybe_go();
     return rename;
-        /*
-        pair<typename Layout::Node*,bool> nb = getNode(name,true);
-        Update upd = stringsIn(m_transform,nb.first,attrs,true);
-        if(!current.find(nb.first)) {
-		    if(nb.second)
-			    IncrNewNode(nb.first);
-            Q.InsNode(nb.first);
-        }
-        else // treat re-insert as modify
-            Q.ModNode(nb.first,upd);
-        maybe_go();
-        */
 }
 template<typename Layout>
 DString DynaView<Layout>::incr_ev_ins_edge(DString name, DString tailname, DString headname, const StrAttrs &attrs) {
@@ -382,7 +370,7 @@ DString DynaView<Layout>::incr_ev_ins_edge(DString name, DString tailname, DStri
         IncrNewEdge(eb.first);
     }
     else
-        Q.ModEdge(eb.first,upd);
+        ModifyEdge(Q,eb.first,upd);
     maybe_go();
     return gd<Name>(eb.first);
 }
@@ -391,7 +379,7 @@ bool DynaView<Layout>::incr_ev_mod_node(DString name,const StrAttrs &attrs) {
     typename Layout::Node *n = getNode(name).first;
     if(!n)
         throw DVNodeDoesNotExist(name.c_str());
-    Q.ModNode(n,stringsIn<Layout>(m_transform,n,attrs,false));
+    ModifyNode(Q,n,stringsIn<Layout>(m_transform,n,attrs,false));
     maybe_go();
     return true;
 }
@@ -400,7 +388,7 @@ bool DynaView<Layout>::incr_ev_mod_edge(DString name,const StrAttrs &attrs) {
     typename Layout::Edge *e = getEdge(name);
     if(!e)
         throw DVEdgeDoesNotExist(name.c_str());
-    Q.ModEdge(e,stringsIn<Layout>(m_transform,e,attrs,false));
+    ModifyEdge(Q,e,stringsIn<Layout>(m_transform,e,attrs,false));
     maybe_go();
     return true;
 }

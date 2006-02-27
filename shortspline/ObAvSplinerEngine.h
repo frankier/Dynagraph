@@ -30,7 +30,7 @@ struct ObAvSplinerEngine : Server<Layout> {
 	// Server
 	void Process(ChangeQueue<Layout> &changeQ) {
 		if(CalculateBounds(changeQ.current))
-			changeQ.GraphUpdateFlags() |= DG_UPD_BOUNDS;
+			igd<Update>(changeQ.client) |= Update(DG_UPD_BOUNDS);
 		double		SEP = gd<GraphGeom>(changeQ.current).separation.Len();
 
 		ObstacleAvoiderSpliner<Layout> obav(Server<Layout>::current);
@@ -63,7 +63,7 @@ struct ObAvSplinerEngine : Server<Layout> {
 			}
 			gd<EdgeGeom>(e).pos.ClipEndpoints(unclipped,tg.pos,eg.tailClipped?&tg.region:0,
 				hg.pos,eg.headClipped?&hg.region:0);
-			changeQ.ModEdge(e,DG_UPD_MOVE);
+			ModifyEdge(changeQ,e,DG_UPD_MOVE);
 		}
 	}
 

@@ -131,12 +131,12 @@ void FDPServer::Process(ChangeQueue<FDPLayout> &Q) {
 	for(ni = Q.current->nodes().begin(); ni!=Q.current->nodes().end(); ++ni) {
 		FDPModel::Node *fn = modelP(*ni);
 		gd<NodeGeom>(*ni).pos = Coord(gd<FDPNode>(fn).pos[0],gd<FDPNode>(fn).pos[1]);
-		Q.ModNode(*ni,DG_UPD_MOVE);
+		ModifyNode(Q,*ni,DG_UPD_MOVE);
 	}
 	/*
 	this algorithm doesn't deal with edges
 	for(ei = Q.current->edges().begin(); ei!=Q.current->edges().end(); ++ei)
-		Q.ModEdge(*ei,DG_UPD_MOVE);
+		ModifyEdge(Q,*ei,DG_UPD_MOVE);
 	*/
 }
 
