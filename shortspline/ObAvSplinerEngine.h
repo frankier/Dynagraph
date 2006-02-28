@@ -17,7 +17,7 @@
 
 #include "fdp/FDPLayout.h"
 #include "common/ChangeQueue.h"
-#include "common/DynagraphServer.h"
+#include "common/ChangeProcessor.h"
 #include "common/CalculateBounds.h"
 
 #include "ObstacleAvoiderSpliner.h"
@@ -25,18 +25,18 @@
 namespace Dynagraph {
 
 template<typename Layout>
-struct ObAvSplinerEngine : Server<Layout> {
-	ObAvSplinerEngine(Layout *client,Layout *current) : Server<Layout>(client,current) {}
-	// Server
+struct ObAvSplinerEngine : ChangeProcessor<Layout> {
+	ObAvSplinerEngine(Layout *client,Layout *current) : ChangeProcessor<Layout>(client,current) {}
+	// ChangeProcessor
 	void Process(ChangeQueue<Layout> &changeQ) {
 		if(CalculateBounds(changeQ.current))
 			igd<Update>(changeQ.client) |= Update(DG_UPD_BOUNDS);
 		double		SEP = gd<GraphGeom>(changeQ.current).separation.Len();
 
-		ObstacleAvoiderSpliner<Layout> obav(Server<Layout>::current);
+		ObstacleAvoiderSpliner<Layout> obav(ChangeProcessor<Layout>::current);
 
 		/* route edges  */
-		for(typename Layout::graphedge_iter ei = Server<Layout>::current->edges().begin(); ei!=Server<Layout>::current->edges().end(); ++ei) {
+		for(typename Layout::graphedge_iter ei = this->current->edges().begin(); ei!=this->current->edges().end(); ++ei) {
 			typename Layout::Edge *e = *ei;
 			NodeGeom &tg = gd<NodeGeom>(e->tail),
 				&hg = gd<NodeGeom>(e->head);

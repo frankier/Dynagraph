@@ -27,7 +27,7 @@ void main() {
 	ChangeQueue queue(&layout,&current);
 	gd<StrAttrs>(&layout)["engines"] = "shapegen,fdp,voronoi,visspline";
 
-	Server *server = createLayoutServer(&layout,&current);
+	ChangeProcessor *server = createLayoutServer(&layout,&current);
 
 	Layout::Node *m = layout.create_node(),*n = layout.create_node();
 	gd<Name>(m) = "m";

@@ -18,7 +18,7 @@
 
 #include "common/LayoutAttrs.h"
 #include "common/ChangeQueue.h"
-#include "common/DynagraphServer.h"
+#include "common/ChangeProcessor.h"
 #include "common/stringsIn.h"
 #include "common/stringsOut.h"
 #include "common/emitGraph.h"
@@ -46,7 +46,7 @@ struct DynaView : IncrLangEvents {
         current, // what's currently being controlled by engine
         old; // when switching engines, the stuff that was already here
 	ChangeQueue<Layout> Q;
-	Server<Layout> *dgserver;
+	ChangeProcessor<Layout> *dgserver;
 	int locks;
     Transform *m_transform;
     bool m_useDotDefaults;

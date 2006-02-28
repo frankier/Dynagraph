@@ -17,7 +17,7 @@
 
 #include "DynaDAGLayout.h"
 #include "common/ChangeQueue.h"
-#include "common/DynagraphServer.h"
+#include "common/ChangeProcessor.h"
 // #include "shortspline/ObstacleAvoiderSpliner.h"
 #include "ns.h"
 #include <float.h>
@@ -940,7 +940,7 @@ struct OptimizerChooser {
 	}
 };
 */
-struct DynaDAGServer : Server<DynaDAGLayout>,DynaDAGServices {
+struct DynaDAGServer : ChangeProcessor<DynaDAGLayout>,DynaDAGServices {
 	DDModel model; // client graph + virtual nodes & edges for tall nodes & edge chains
 	Config config;	// indexes layout nodes by rank and order
 	Ranker ranker;
@@ -954,7 +954,7 @@ struct DynaDAGServer : Server<DynaDAGLayout>,DynaDAGServices {
 #endif
 
 	DynaDAGServer(DynaDAGLayout *client,DynaDAGLayout *current) :
-		Server<DynaDAGLayout>(client,current),
+		ChangeProcessor<DynaDAGLayout>(client,current),
 		model(),
 		config(this,model,client,current,&xsolver),
 		ranker(this,config),
@@ -962,7 +962,7 @@ struct DynaDAGServer : Server<DynaDAGLayout>,DynaDAGServices {
 		xsolver(config,gd<GraphGeom>(current).resolution.x),
 		spliner(config) {}
 	~DynaDAGServer();
-	// Server
+	// ChangeProcessor
 	void Process(DDChangeQueue &changeQ);
 	// DynaDAGServices
 	std::pair<DDMultiNode*,DDModel::Node*> OpenModelNode(DynaDAGLayout::Node *layoutN);

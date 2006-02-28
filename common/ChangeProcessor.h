@@ -22,20 +22,20 @@
 namespace Dynagraph {
 
 template<typename Layout>
-struct Server {
+struct ChangeProcessor {
 	typedef Layout LayoutType;
 	Layout *const client, *const current;
 
 	virtual void Process(ChangeQueue<Layout> &Q) = 0;
-	Server(Layout *client,Layout *current) : client(client), current(current) {}
-	virtual ~Server() {}
+	ChangeProcessor(Layout *client,Layout *current) : client(client), current(current) {}
+	virtual ~ChangeProcessor() {}
 };
 template<typename Layout>
-struct CompoundServer : Server<Layout> {
-	typedef std::vector<Server<Layout>*> ServerV;
+struct CompoundServer : ChangeProcessor<Layout> {
+	typedef std::vector<ChangeProcessor<Layout>*> ServerV;
 	ServerV actors;
 	void Process(ChangeQueue<Layout> &Q);
-	CompoundServer(Layout *client,Layout *currentLayout) : Server<Layout>(client,currentLayout) {}
+	CompoundServer(Layout *client,Layout *currentLayout) : ChangeProcessor<Layout>(client,currentLayout) {}
 	~CompoundServer();
 };
 template<typename Layout>
@@ -53,8 +53,8 @@ CompoundServer<Layout>::~CompoundServer() {
 // simple server that just updates the current subgraph based on changes.
 // this must only be done once, that's why individual layout servers can't be responsible.
 template<typename Layout>
-struct UpdateCurrent : Server<Layout> {
-	UpdateCurrent(Layout *client,Layout *currentLayout) : Server<Layout>(client,currentLayout) {}
+struct UpdateCurrent : ChangeProcessor<Layout> {
+	UpdateCurrent(Layout *client,Layout *currentLayout) : ChangeProcessor<Layout>(client,currentLayout) {}
 	void Process(ChangeQueue<Layout> &Q) {
 		Q.UpdateCurrent();
 	}

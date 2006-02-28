@@ -19,7 +19,7 @@
 #define FDP_H
 
 #include "common/ChangeQueue.h"
-#include "common/DynagraphServer.h"
+#include "common/ChangeProcessor.h"
 #include "FDPLayout.h"
 #include "FDPModel.h"
 #include "grid.h"
@@ -34,7 +34,7 @@ struct StillHasEdges : DGException {
   StillHasEdges() : DGException("a node was deleted without all of its edges being deleted (impossible!)",true) {}
 };
 
-struct FDPServer : Server<FDPLayout>,Grid::Visitor {
+struct FDPServer : ChangeProcessor<FDPLayout>,Grid::Visitor {
 	int numIters;
 	bool useComp,
 		useGrid;
@@ -50,7 +50,7 @@ struct FDPServer : Server<FDPLayout>,Grid::Visitor {
 		Radius2; // Radius of interaction squared. Anything outside of the radius has no effect on node
 
 	FDPServer(FDPLayout *client, FDPLayout *current) :
-	  Server<FDPLayout>(client,current),
+	  ChangeProcessor<FDPLayout>(client,current),
 	  numIters(40),
 	  useComp(false),
 	  useGrid(true),
@@ -64,7 +64,7 @@ struct FDPServer : Server<FDPLayout>,Grid::Visitor {
 	  Rfact2(1.0),
 	  Radius2(0.0) {}
 	~FDPServer() {}
-	// Server
+	// ChangeProcessor
 	void Process(ChangeQueue<FDPLayout> &changeQ);
 	// Grid::Visitor
 	int VisitCell(Cell *cell,Grid *grid);

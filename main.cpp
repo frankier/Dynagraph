@@ -425,7 +425,7 @@ int main(int argc, char *args[]) {
 			forceRelayout?"batch":"incremental");
 		DynaDAGLayout layout,
 			current(&layout);
-		Server<DynaDAGLayout> &eng = *createLayoutServer<DynaDAGLayout>(&layout,&current);
+		ChangeProcessor<DynaDAGLayout> &eng = *createLayoutServer<DynaDAGLayout>(&layout,&current);
 		timer.Now(r_progress,"created engine.\n");
 		DDChangeQueue Q(&layout,&current);
 		if(dotfile) {

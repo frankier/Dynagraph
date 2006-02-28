@@ -23,7 +23,6 @@ bool g_useDotDefaults = false;
 
 struct EgzamplView : DynaView {
 	void IncrHappened() { 
-		// obviously the output is not essential
 		// often this method will need to map Layout nodes & edges to application objects
 		// sorry, there is no better way than to use a map<>
 		for(Layout::node_iter ni = Q.insN.nodes().begin(); ni!=Q.insN.nodes().end(); ++ni)

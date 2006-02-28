@@ -23,12 +23,12 @@ namespace Dynagraph {
 
 template<typename Layout>
 struct ServerCreator {
-	typedef Server<Layout>* (*create_fn)(Layout *cli,Layout *curr);
+	typedef ChangeProcessor<Layout>* (*create_fn)(Layout *cli,Layout *curr);
 };
 template<typename ServerType>
 struct ServerCreatorInstance {
 	typedef typename ServerType::LayoutType Layout;
-	static Server<Layout>* create(Layout *client,Layout *current) {
+	static ChangeProcessor<Layout>* create(Layout *client,Layout *current) {
 		return new ServerType(client,current);
 	}
 };
@@ -50,7 +50,7 @@ struct creators<FDP::FDPLayout> : std::map<DString,ServerCreator<FDP::FDPLayout>
 
 // creates the servers specified in gd<StrAttrs>(client)["engines"]
 template<typename Layout>
-Server<Layout> *createLayoutServer(Layout *client,Layout *current) {
+ChangeProcessor<Layout> *createLayoutServer(Layout *client,Layout *current) {
 	CompoundServer<Layout> *eng = new CompoundServer<Layout>(client,current);
     FCRData<Layout> *fcrdata = new FCRData<Layout>(client);
     FCRBefore<Layout> *fcrbefore = new FCRBefore<Layout>(client,current,fcrdata);
@@ -75,7 +75,7 @@ Server<Layout> *createLayoutServer(Layout *client,Layout *current) {
 			*/
 			throw DGException2("engine name not known or not appropriate for graph type",*ei);
 		}
-		Server<Layout> *server = crea(client,current);
+		ChangeProcessor<Layout> *server = crea(client,current);
 		eng->actors.push_back(server);
 	}
 	eng->actors.push_back(fcrafter);

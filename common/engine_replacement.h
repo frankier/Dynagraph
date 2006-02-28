@@ -19,7 +19,7 @@ namespace Dynagraph {
 // To replace a layout engine, re-insert everything into a new engine and delete the old
 // These functions manipulate the queue to make it look like everything just moved
 // instead of being re-inserted
-inline void pre_engine_replacement(Server *oldEngine,ChangeQueue &Q,Layout &oldCurrent) {
+inline void pre_engine_replacement(ChangeProcessor *oldEngine,ChangeQueue &Q,Layout &oldCurrent) {
 	// remember the current - will be used in post_engine_replacement
     oldCurrent = *Q.current;
 	// erase old layout

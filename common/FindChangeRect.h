@@ -25,10 +25,10 @@ struct FCRData {
     FCRData(Layout *clientL) : changeN(clientL),changeE(clientL) {}
 };
 template<typename Layout>
-struct FCRBefore : Server<Layout> {
+struct FCRBefore : ChangeProcessor<Layout> {
     FCRData<Layout> *data;
 	FCRBefore(Layout *clientL,Layout *currentLayout,FCRData<Layout> *data)  :
-        Server<Layout>(clientL,currentLayout), data(data) {}
+        ChangeProcessor<Layout>(clientL,currentLayout), data(data) {}
 	void Process(ChangeQueue<Layout> &Q);
 };
 template<typename Layout>
@@ -37,10 +37,10 @@ void FCRBefore<Layout>::Process(ChangeQueue<Layout> &Q) {
 	data->changeE = Q.insE|Q.modE|Q.delE;
 }
 template<typename Layout>
-struct FCRAfter : Server<Layout> {
+struct FCRAfter : ChangeProcessor<Layout> {
     FCRData<Layout> *data;
 	FCRAfter(Layout *clientL,Layout *currentLayout,FCRData<Layout> *data)  :
-        Server<Layout>(clientL,currentLayout),data(data) {}
+        ChangeProcessor<Layout>(clientL,currentLayout),data(data) {}
     ~FCRAfter() {
         delete data;
     }

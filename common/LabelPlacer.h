@@ -20,9 +20,9 @@
 namespace Dynagraph {
 
 template<typename Layout>
-struct LabelPlacer : Server<Layout> {
+struct LabelPlacer : ChangeProcessor<Layout> {
 	void Process(ChangeQueue<Layout> &Q);
-	LabelPlacer(Layout *client,Layout *currentLayout) : Server<Layout>(client,currentLayout) {}
+	LabelPlacer(Layout *client,Layout *currentLayout) : ChangeProcessor<Layout>(client,currentLayout) {}
 	~LabelPlacer() {}
 };
 template<typename Layout>

@@ -20,18 +20,20 @@
 
 namespace Dynagraph {
 
-template<typename Graph>
-struct 
-template<typename NGraph> // some graph supporting attributes of StrGraph
+// NGraph is LGraph containing at least StrAttrs2
+template<typename NGraph> 
 struct IncrStrGraphHandler : IncrLangEvents {
 	NGraph world_,current_;
 	ChangeQueue<NGraph> Q_;
+	ChangeProcessor<NGraph> *next_;
     int locks_;
 
-    IncrStrGraphHandler() : locks_(0),world_(),current_(&world_),Q_(&world_,&current_) {}
+    IncrStrGraphHandler() : world_(),current_(&world_),Q_(&world_,&current_),next_(0),locks_(0) {}
+
     bool maybe_go();
+
     // IncrLangEvents
-	DString dinotype() { return "abstract"; }
+	DString dinotype() { return "stringraph"; }
 	bool incr_ev_open_graph(DString graph,const StrAttrs &attrs);
 	bool incr_ev_close_graph();
 	bool incr_ev_mod_graph(const StrAttrs &attrs);
@@ -54,13 +56,12 @@ template<typename NGraph>
 bool IncrStrGraphHandler<NGraph>::maybe_go() {
     if(locks>0)
         return false;
-    g_dinoMachine.changed(gd<Name>(g));
+	if(next_)
+		next_->Process(Q_);
     return true;
 }
 template<typename NGraph>
 bool IncrStrGraphHandler<NGraph>::incr_ev_open_graph(DString graph,const StrAttrs &attrs) {
-    if(graph.empty())
-        graph = randomName('g');
     gd<Name>(g) = graph;
     incr_set_handler(graph,this);
     gd<StrAttrs>(g) = attrs;

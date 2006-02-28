@@ -22,9 +22,9 @@
 namespace Dynagraph {
 
 template<typename Layout>
-struct ShapeGenerator : Server<Layout> {
+struct ShapeGenerator : ChangeProcessor<Layout> {
 	void Process(ChangeQueue<Layout> &Q);
-	ShapeGenerator(Layout *client,Layout *currentLayout) : Server<Layout>(client,currentLayout) {}
+	ShapeGenerator(Layout *client,Layout *currentLayout) : ChangeProcessor<Layout>(client,currentLayout) {}
 	~ShapeGenerator() {}
 };
 template<typename Layout>

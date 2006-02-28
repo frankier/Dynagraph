@@ -22,9 +22,9 @@
 namespace Dynagraph {
 
 template<typename Layout>
-struct ColorByAge : Server<Layout> {
+struct ColorByAge : ChangeProcessor<Layout> {
 	void Process(ChangeQueue<Layout> &Q);
-	ColorByAge(Layout *client,Layout *currentLayout) : Server<Layout>(client,currentLayout) {}
+	ColorByAge(Layout *client,Layout *currentLayout) : ChangeProcessor<Layout>(client,currentLayout) {}
 	~ColorByAge() {}
 };
 
