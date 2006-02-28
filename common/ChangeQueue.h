@@ -189,7 +189,6 @@ ChangeQueue<Graph> &ChangeQueue<Graph>::operator+=(ChangeQueue<Graph> &Q) {
 		DelNode(*ni);
 	for(ei = Q.delE.edges().begin(); ei!=Q.delE.edges().end(); ++ei)
 		DelEdge(*ei);
-	GraphUpdateFlags() |= Q.GraphUpdateFlags();
 	return *this;
 }
 

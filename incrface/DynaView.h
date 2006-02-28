@@ -177,10 +177,6 @@ template<typename Layout>
 void DynaView<Layout>::completeReplacement() {
 	//post_engine_replacement(Q,old);
 }
-/*
-template<typename Layout>
-std::pair<typename Layout::Node*,bool> DynaView<Layout>::getNode(DString name,bool create)
-*/
 template<typename Layout>
 std::pair<typename Layout::Edge*,bool> DynaView<Layout>::getEdge(DString name,typename Layout::Node *t,typename Layout::Node *h,bool create) {
 	typename Layout::Edge *e=0;
