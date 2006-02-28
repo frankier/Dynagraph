@@ -73,7 +73,7 @@ Server<Layout> *createLayoutServer(Layout *client,Layout *current) {
 				std::cout << reinterpret_cast<int>(ci->first.c_str()) << " " << ci->first << " -> " << ci->second << std::endl;
 			delete eng;
 			*/
-			throw DGException2("engine name not known or not appropriate for graph type",strdup(ei->c_str())); // excuse me
+			throw DGException2("engine name not known or not appropriate for graph type",*ei);
 		}
 		Server<Layout> *server = crea(client,current);
 		eng->actors.push_back(server);
