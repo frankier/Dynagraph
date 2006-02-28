@@ -24,8 +24,6 @@ namespace Dynagraph {
 template<typename Layout>
 struct Server {
 	typedef Layout LayoutType;
-	// shared by all actors in a system;  represents everything currently inserted
-	// note this is a subgraph of the client layout
 	Layout *const client, *const current;
 
 	virtual void Process(ChangeQueue<Layout> &Q) = 0;

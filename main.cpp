@@ -405,16 +405,13 @@ int main(int argc, char *args[]) {
 					incr_yyparse(); 
 					break; // end of stream
 				}
-				catch(IncrError ie) { // parser error
-					fprintf(stdout,"message \"%s\"\n",ie.descrip.c_str());
-				}
 				catch(DGException2 dgx) {
-					fprintf(stdout,"message \"%s: %s\"\n",dgx.exceptype,dgx.param);
+					fprintf(stdout,"message \"%s: %s\"\n",dgx.exceptype.c_str(),dgx.param.c_str());
 					if(dgx.fatal)
 						break;
 				}
 				catch(DGException dgx) {
-					fprintf(stdout,"message \"exception: %s\"\n",dgx.exceptype);
+					fprintf(stdout,"message \"exception: %s\"\n",dgx.exceptype.c_str());
 					if(dgx.fatal)
 						break;
 				}

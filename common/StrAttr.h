@@ -23,6 +23,7 @@
 #include "LGraph.h"
 #include "LGraph-cdt.h"
 #include "StringDict.h"
+#include "dgxep.h"
 #include "traversal.h"
 #include <map>
 #include "parsestr.h"

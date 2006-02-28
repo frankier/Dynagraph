@@ -14,26 +14,18 @@
 *                   http://dynagraph.org                  *
 **********************************************************/
 
+#ifndef dstringxep_h
+#define dstringxep_h
 
-#ifndef dgxep_h
-#define dgxep_h
-
-#include "StringDict.h"
+#include "dgxep.h"
 
 namespace Dynagraph {
 
-// a base for all exceptions so we can report the basics
-struct DGException {
-    DString exceptype;
-    bool fatal;
-    DGException(DString exceptype,bool fatal = false) : exceptype(exceptype),fatal(fatal) {}
-};
-// pretty dopey - eliminate a few more chars in xep defs
-struct DGException2 : DGException {
-    DString param;
-    DGException2(DString exceptype,DString param,bool fatal = false) : DGException(exceptype,fatal),param(param) {}
+struct DictStringLost : DGException2 {
+	// I don't *think* this could cause some horrible recursive crash..!?
+	DictStringLost(DString s) : DGException2("StringDict internal exception: string lost",s,true) {}
 };
 
 } // namespace Dynagraph
 
-#endif //dgxep_h
+#endif // dstringxep_h

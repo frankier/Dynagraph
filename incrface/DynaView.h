@@ -27,6 +27,7 @@
 #include "common/randomName.h"
 #include "common/Transform.h"
 #include "DinoMachine.h"
+#include "incrxep.h"
 
 namespace Dynagraph {
 
@@ -34,35 +35,6 @@ namespace Dynagraph {
 // applications (e.g. the dynagraph executable & dynagraph COM component)
 // derive from this and override the Incr...() methods to share a basic
 // understanding of how to deal with names, how to create/replace the layout server, etc.
-
-// all these exceptions are recoverable: report error to client and ignore
-struct DVException : DGException2 {
-	DVException(const char *xep,const char *parm) : DGException2(xep,parm,false) {}
-};
-struct DVReopenXep : DVException {
-    DVReopenXep(const char *name) : DVException("Tried to reopen graph",name) {}
-};
-struct DVEdgeReopen : DVException {
-    DVEdgeReopen(const char *name) : DVException("The edge name has already been used",name) {}
-};
-struct DVNodeReopen : DVException {
-    DVNodeReopen(const char *name) : DVException("The node name has already been used",name) {}
-};
-struct DVEdgeTailDoesNotExist : DVException {
-	DVEdgeTailDoesNotExist(const char *name) : DVException("Tried to open edge but tail does not exist",name) {}
-};
-struct DVEdgeHeadDoesNotExist : DVException {
-	DVEdgeHeadDoesNotExist(const char *name) : DVException("Tried to open edge but head does not exist",name) {}
-};
-struct DVEdgeNameMismatch : DVException {
-    DVEdgeNameMismatch(const char *name) : DVException("Tried to re-open edge under new name",name) {}
-};
-struct DVEdgeDoesNotExist : DVException {
-    DVEdgeDoesNotExist(const char *name) : DVException("Tried to modify or delete unknown edge",name) {}
-};
-struct DVNodeDoesNotExist : DVException {
-    DVNodeDoesNotExist(const char *name) : DVException("Tried to modify or delete unknown node",name) {}
-};
 
 template<typename Layout>
 struct DynaView : IncrLangEvents {
@@ -184,7 +156,7 @@ std::pair<typename Layout::Edge*,bool> DynaView<Layout>::getEdge(DString name,ty
 		name = randomName('e');
 	else if((e = edges[name])) {
 		if(t && t!=e->tail || h && h!=e->head)
-			throw DVEdgeReopen(name.c_str());
+			throw IncrEdgeReopen(name.c_str());
 		return std::make_pair(e,false);
 	}
 	if(!(t && h))
@@ -205,9 +177,9 @@ std::pair<typename Layout::Edge*,bool> DynaView<Layout>::getEdge(DString name,DS
 	typename Layout::Node *t = getNode(tail,false).first,
 		*h = getNode(head,false).first;
 	if(!t)
-		throw DVEdgeTailDoesNotExist(tail.c_str());
+		throw IncrEdgeTailDoesNotExist(tail.c_str());
 	if(!h)
-		throw DVEdgeHeadDoesNotExist(head.c_str());
+		throw IncrEdgeHeadDoesNotExist(head.c_str());
 	return getEdge(name,t,h,create);
 }
 template<typename Layout>
@@ -299,7 +271,7 @@ bool DynaView<Layout>::incr_ev_open_graph(DString graph,const StrAttrs &attrs) {
 	bool isModify = false;
     if(dgserver) {
         if(!m_allowOneReopen)
-            throw DVReopenXep(graph.c_str());
+            throw IncrReopenXep(graph.c_str());
         m_allowOneReopen = false;
 		isModify = true;
     }
@@ -359,7 +331,7 @@ template<typename Layout>
 DString DynaView<Layout>::incr_ev_ins_edge(DString name, DString tailname, DString headname, const StrAttrs &attrs) {
     std::pair<typename Layout::Edge*,bool> eb = getEdge(name,tailname,headname,true);
 	if(!eb.second&&gd<Name>(eb.first)!=name)
-		throw DVEdgeNameMismatch(name.c_str());
+		throw IncrEdgeNameMismatch(name.c_str());
     Update upd = stringsIn<Layout>(m_transform,eb.first,attrs,true);
     if(eb.second) {
         Q.InsEdge(eb.first);
@@ -374,7 +346,7 @@ template<typename Layout>
 bool DynaView<Layout>::incr_ev_mod_node(DString name,const StrAttrs &attrs) {
     typename Layout::Node *n = getNode(name).first;
     if(!n)
-        throw DVNodeDoesNotExist(name.c_str());
+        throw IncrNodeDoesNotExist(name.c_str());
     ModifyNode(Q,n,stringsIn<Layout>(m_transform,n,attrs,false));
     maybe_go();
     return true;
@@ -383,7 +355,7 @@ template<typename Layout>
 bool DynaView<Layout>::incr_ev_mod_edge(DString name,const StrAttrs &attrs) {
     typename Layout::Edge *e = getEdge(name);
     if(!e)
-        throw DVEdgeDoesNotExist(name.c_str());
+        throw IncrEdgeDoesNotExist(name.c_str());
     ModifyEdge(Q,e,stringsIn<Layout>(m_transform,e,attrs,false));
     maybe_go();
     return true;
@@ -392,7 +364,7 @@ template<typename Layout>
 bool DynaView<Layout>::incr_ev_del_node(DString name) {
 	typename Layout::Node *n = getNode(name).first;
     if(!n)
-        throw DVNodeDoesNotExist(name.c_str());
+        throw IncrNodeDoesNotExist(name.c_str());
     Q.DelNode(n);
     maybe_go();
     return true;
@@ -401,7 +373,7 @@ template<typename Layout>
 bool DynaView<Layout>::incr_ev_del_edge(DString name) {
     typename Layout::Edge *e = getEdge(name);
     if(!e)
-        throw DVEdgeDoesNotExist(name.c_str());
+        throw IncrEdgeDoesNotExist(name.c_str());
     Q.DelEdge(e);
     maybe_go();
     return true;
@@ -416,7 +388,7 @@ template<typename Layout>
 bool DynaView<Layout>::incr_ev_req_node(DString name) {
     typename Layout::Node *n = getNode(name).first;
     if(!n)
-        throw DVNodeDoesNotExist(name.c_str());
+        throw IncrNodeDoesNotExist(name.c_str());
 	std::cout << "fulfil node " << gd<Name>(&layout) << " " << name << " " << gd<StrAttrs>(n);
     return true;
 }
@@ -424,7 +396,7 @@ template<typename Layout>
 bool DynaView<Layout>::incr_ev_req_edge(DString name) {
     typename Layout::Edge *e = getEdge(name);
     if(!e)
-        throw DVEdgeDoesNotExist(name.c_str());
+        throw IncrEdgeDoesNotExist(name.c_str());
     std::cout << "fulfil edge " << gd<Name>(&layout) << " " << name << " " << gd<StrAttrs>(e);
     return true;
 }

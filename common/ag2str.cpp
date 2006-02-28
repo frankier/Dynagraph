@@ -19,6 +19,7 @@
 
 #include "ag2str.h"
 #include "StrAttr.h"
+#include "useful.h"
 
 using namespace std;
 
