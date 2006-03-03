@@ -84,11 +84,12 @@ void stringsOut(Transform *trans,ChangeQueue<Layout> &Q) {
 		}
 		*/
 	}
-	if(igd<Update>(Q.client).flags)
-		stringifyLayoutChanges(trans,Q.client,igd<Update>(Q.client));
+	if(ModifyFlags(Q).flags)
+		stringifyLayoutChanges(trans,Q.client,ModifyFlags(Q));
 	typename Layout::node_iter ni;
 	typename Layout::graphedge_iter ei;
 	if(llchanged) {
+		// not hit: see above
 		// all coordinates have changed because they're based on lower-left corner
 		for(ni = Q.current->nodes().begin(); ni!=Q.current->nodes().end(); ++ni)
 			if(!Q.insN.find(*ni) && !Q.delN.find(*ni))

@@ -402,7 +402,6 @@ normalize(graph_t *g)
 }
 */
 void VoronoiServer::Process(ChangeQueue<FDPLayout> &Q) {
-	//Q.UpdateCurrent();
     makeInfo();
 
       /* establish and verify bounding box */

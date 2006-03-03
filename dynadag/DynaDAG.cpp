@@ -184,7 +184,7 @@ void DynaDAGServer::updateBounds(DDChangeQueue &changeQ) {
   }
   if(gd<GraphGeom>(current).bounds != bb) {
     gd<GraphGeom>(current).bounds = bb;
-    igd<Update>(changeQ.client) |= DG_UPD_BOUNDS;
+    ModifyFlags(changeQ) |= DG_UPD_BOUNDS;
   }
 }
 void DynaDAGServer::findChangedNodes(DDChangeQueue &changeQ) {
@@ -454,7 +454,7 @@ void DynaDAGServer::Process(DDChangeQueue &changeQ) {
 	
 	findFlowSlopes(changeQ);
 
-	redrawEdges(changeQ,igd<Update>(changeQ.client).flags&DG_UPD_EDGESTYLE);
+	redrawEdges(changeQ,ModifyFlags(changeQ).flags&DG_UPD_EDGESTYLE);
 	timer.LoopPoint(r_timing,"draw splines");
 
 	// restore the edges that were re-inserted because secondOfTwo was reset

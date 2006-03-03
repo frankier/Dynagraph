@@ -114,7 +114,7 @@ void main() {
 	// (modify)
 	Layout::Node *m = dynaview->getNode("m",false).first;
 	gd<NodeGeom>(m).pos = Coord(5,5);
-	igd<Update>(dynaview->Q.ModNode(m)) |= DG_UPD_MOVE;
+	ModifyNode(dynaview->Q,m,DG_UPD_MOVE);
 	dynaview->maybe_go();
 	// (create node)
 	cout << "step 2b" << endl;

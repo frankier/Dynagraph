@@ -106,8 +106,8 @@ void Ranker::doNodeHeight(DynaDAGLayout::Node *n) {
 void Ranker::moveOldNodes(DDChangeQueue &changeQ) {
 	for(DynaDAGLayout::node_iter ni = changeQ.modN.nodes().begin(); ni!=changeQ.modN.nodes().end(); ++ni) {
 		DDMultiNode *n = DDp(*ni);
-		unsigned upd = igd<Update>(*ni).flags;
-		if(upd & DG_UPD_NAIL) {
+		Update upd = igd<Update>(*ni);
+		if(upd.flags & DG_UPD_NAIL) {
 			DynaDAGLayout::Node *vn = config.current->find(*ni);
 			if(gd<NodeGeom>(*ni).nail & DG_NAIL_Y) {
 				if(!gd<NodeGeom>(*ni).pos.valid)
@@ -118,7 +118,7 @@ void Ranker::moveOldNodes(DDChangeQueue &changeQ) {
 			else if(n->rankFixed) // un-nail
 				fixNode(vn,false);
 		}
-		if(upd & DG_UPD_REGION)
+		if(upd.flags & DG_UPD_REGION)
 			doNodeHeight(*ni);
 	}
 }

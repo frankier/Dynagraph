@@ -51,12 +51,12 @@ struct creators<FDP::FDPLayout> : std::map<DString,ServerCreator<FDP::FDPLayout>
 // creates the servers specified in gd<StrAttrs>(client)["engines"]
 template<typename Layout>
 ChangeProcessor<Layout> *createLayoutServer(Layout *client,Layout *current) {
-	CompoundServer<Layout> *eng = new CompoundServer<Layout>(client,current);
+	CompoundChangeProcessor<Layout> *eng = new CompoundChangeProcessor<Layout>(client,current);
     FCRData<Layout> *fcrdata = new FCRData<Layout>(client);
     FCRBefore<Layout> *fcrbefore = new FCRBefore<Layout>(client,current,fcrdata);
     FCRAfter<Layout> *fcrafter = new FCRAfter<Layout>(client,current,fcrdata);
 	eng->actors.push_back(fcrbefore);
-	eng->actors.push_back(new UpdateCurrent<Layout>(client,current)); 
+	eng->actors.push_back(new UpdateCurrentProcessor<Layout>(client,current)); 
 	DString engines = gd<StrAttrs>(client)["engines"];
 	if(engines.empty())
 		throw DGException("engine(s) were not specified on call to createLayoutServer");

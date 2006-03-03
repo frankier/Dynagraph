@@ -54,7 +54,7 @@ void FCRAfter<Layout>::Process(ChangeQueue<Layout> &Q) {
 	for(typename Layout::graphedge_iter ei = data->changeE.edges().begin(); ei!=data->changeE.edges().end(); ++ei)
 		changerect |= gd<EdgeGeom>(*ei).pos.BoundingBox();
 	if(assign(gd<GraphGeom>(Q.current).changerect,changerect))
-		igd<Update>(Q.client) |= DG_UPD_CHANGERECT;
+		ModifyFlags(Q) |= DG_UPD_CHANGERECT;
 }
 
 } // namespace Dynagraph

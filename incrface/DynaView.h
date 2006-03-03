@@ -291,7 +291,7 @@ bool DynaView<Layout>::incr_ev_close_graph() {
 }
 template<typename Layout>
 bool DynaView<Layout>::incr_ev_mod_graph(const StrAttrs &attrs) {
-    igd<Update>(Q.client) |= open_layout(attrs);
+    ModifyFlags(Q) |= open_layout(attrs);
     maybe_go();
     return true;
 }

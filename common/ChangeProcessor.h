@@ -14,8 +14,8 @@
 *                   http://dynagraph.org                  *
 **********************************************************/
 
-#ifndef DynagraphServer_h
-#define DynagraphServer_h
+#ifndef ChangeProcessor_h
+#define ChangeProcessor_h
 
 #include "Modify.h"
 
@@ -31,20 +31,20 @@ struct ChangeProcessor {
 	virtual ~ChangeProcessor() {}
 };
 template<typename Layout>
-struct CompoundServer : ChangeProcessor<Layout> {
+struct CompoundChangeProcessor : ChangeProcessor<Layout> {
 	typedef std::vector<ChangeProcessor<Layout>*> ServerV;
 	ServerV actors;
 	void Process(ChangeQueue<Layout> &Q);
-	CompoundServer(Layout *client,Layout *currentLayout) : ChangeProcessor<Layout>(client,currentLayout) {}
-	~CompoundServer();
+	CompoundChangeProcessor(Layout *client,Layout *currentLayout) : ChangeProcessor<Layout>(client,currentLayout) {}
+	~CompoundChangeProcessor();
 };
 template<typename Layout>
-void CompoundServer<Layout>::Process(ChangeQueue<Layout> &Q) {
+void CompoundChangeProcessor<Layout>::Process(ChangeQueue<Layout> &Q) {
 	for(typename ServerV::iterator i = actors.begin(); i!=actors.end(); ++i)
 		(*i)->Process(Q);
 }
 template<typename Layout>
-CompoundServer<Layout>::~CompoundServer() {
+CompoundChangeProcessor<Layout>::~CompoundChangeProcessor() {
 	for(typename ServerV::iterator i = actors.begin(); i!=actors.end(); ++i)
 		delete *i;
 	actors.clear();
@@ -53,8 +53,8 @@ CompoundServer<Layout>::~CompoundServer() {
 // simple server that just updates the current subgraph based on changes.
 // this must only be done once, that's why individual layout servers can't be responsible.
 template<typename Layout>
-struct UpdateCurrent : ChangeProcessor<Layout> {
-	UpdateCurrent(Layout *client,Layout *currentLayout) : ChangeProcessor<Layout>(client,currentLayout) {}
+struct UpdateCurrentProcessor : ChangeProcessor<Layout> {
+	UpdateCurrentProcessor(Layout *client,Layout *currentLayout) : ChangeProcessor<Layout>(client,currentLayout) {}
 	void Process(ChangeQueue<Layout> &Q) {
 		Q.UpdateCurrent();
 	}
@@ -62,4 +62,4 @@ struct UpdateCurrent : ChangeProcessor<Layout> {
 
 } // namespace Dynagraph
 
-#endif //DynagraphServer_h
+#endif //ChangeProcessor_h

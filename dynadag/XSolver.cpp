@@ -241,10 +241,10 @@ void XSolver::Place(DDChangeQueue &changeQ) {
 #else
 	// obliterate constraints on all changed nodes & edges
 	for(DynaDAGLayout::graphedge_iter ei = changeQ.modE.edges().begin(); ei!=changeQ.modE.edges().end(); ++ei)
-		if(igd<Update>(*ei).flags&DG_UPD_MOVE)
+		if(igd<Update>(*ei)&DG_UPD_MOVE)
 			InvalidateChainConstraints(DDp(*ei));
 	for(DynaDAGLayout::node_iter ni = changeQ.modN.nodes().begin(); ni!=changeQ.modN.nodes().end(); ++ni)
-		if(igd<Update>(*ni).flags&DG_UPD_MOVE)
+		if(igd<Update>(*ni)&DG_UPD_MOVE)
 			InvalidateChainConstraints(DDp(*ni));
 	restoreNodesep(changeQ);
 	restoreEdgeCost(changeQ);

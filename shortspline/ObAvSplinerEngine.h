@@ -30,7 +30,7 @@ struct ObAvSplinerEngine : ChangeProcessor<Layout> {
 	// ChangeProcessor
 	void Process(ChangeQueue<Layout> &changeQ) {
 		if(CalculateBounds(changeQ.current))
-			igd<Update>(changeQ.client) |= Update(DG_UPD_BOUNDS);
+			ModifyFlags(changeQ) |= Update(DG_UPD_BOUNDS);
 		double		SEP = gd<GraphGeom>(changeQ.current).separation.Len();
 
 		ObstacleAvoiderSpliner<Layout> obav(ChangeProcessor<Layout>::current);
