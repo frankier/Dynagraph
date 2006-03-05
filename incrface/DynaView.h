@@ -50,12 +50,12 @@ struct DynaView : IncrLangEvents {
 	int locks;
     Transform *m_transform;
     bool m_useDotDefaults;
-	bool m_replacementFlag, // whether we're in the middle of engine replacement
-        m_allowOneReopen;
-
+	bool m_replacementFlag; // whether we're in the middle of engine replacement
 
 	// implement these to respond to incrface events
 	virtual void IncrHappened() = 0;
+	virtual void IncrOpen() = 0;
+	virtual void IncrClose() = 0;
 	virtual void IncrNewNode(typename Layout::Node *n) = 0;
 	virtual void IncrNewEdge(typename Layout::Edge *e) = 0;
 
@@ -98,20 +98,20 @@ struct DynaView : IncrLangEvents {
 	
     // IncrLangEvents
 	DString dinotype() { return "layout"; }
-	bool incr_ev_open_graph(DString graph,const StrAttrs &attrs);
-	bool incr_ev_close_graph();
-	bool incr_ev_mod_graph(const StrAttrs &attrs);
-	bool incr_ev_lock();
-	bool incr_ev_unlock();
+	void incr_ev_open_graph(DString graph,const StrAttrs &attrs);
+	void incr_ev_close_graph();
+	void incr_ev_mod_graph(const StrAttrs &attrs);
+	void incr_ev_lock();
+	void incr_ev_unlock();
 	DString incr_ev_ins_node(DString name, const StrAttrs &attrs, bool merge);
 	DString incr_ev_ins_edge(DString name, DString tailname, DString headname, const StrAttrs &attrs);
-	bool incr_ev_mod_node(DString name,const StrAttrs &attrs);
-	bool incr_ev_mod_edge(DString name,const StrAttrs &attrs);
-	bool incr_ev_del_node(DString name);
-	bool incr_ev_del_edge(DString name);
-	bool incr_ev_req_graph();
-	bool incr_ev_req_node(DString name);
-	bool incr_ev_req_edge(DString name);
+	void incr_ev_mod_node(DString name,const StrAttrs &attrs);
+	void incr_ev_mod_edge(DString name,const StrAttrs &attrs);
+	void incr_ev_del_node(DString name);
+	void incr_ev_del_edge(DString name);
+	void incr_ev_req_graph();
+	void incr_ev_req_node(DString name);
+	void incr_ev_req_edge(DString name);
     void incr_ev_load_strgraph(StrGraph *sg,bool merge, bool del);
 };
 
@@ -124,8 +124,7 @@ DynaView<Layout>::DynaView(Name name,Transform *transform, bool useDotDefaults) 
 	locks(0),
     m_transform(transform),
     m_useDotDefaults(useDotDefaults),
-    m_replacementFlag(false),
-    m_allowOneReopen(false)
+    m_replacementFlag(false)
 {
 	if(name.empty())
 		name = randomName('v');
@@ -138,7 +137,6 @@ DynaView<Layout>::~DynaView() {
 }
 template<typename Layout>
 void DynaView<Layout>::createServer() {
-	// the underlying structure is the same here: just swap engine
 	if(dgserver) {
 		delete dgserver;
 		dgserver = 0;
@@ -156,7 +154,7 @@ std::pair<typename Layout::Edge*,bool> DynaView<Layout>::getEdge(DString name,ty
 		name = randomName('e');
 	else if((e = edges[name])) {
 		if(t && t!=e->tail || h && h!=e->head)
-			throw IncrEdgeReopen(name.c_str());
+			throw IncrEdgeReopen(name);
 		return std::make_pair(e,false);
 	}
 	if(!(t && h))
@@ -177,9 +175,9 @@ std::pair<typename Layout::Edge*,bool> DynaView<Layout>::getEdge(DString name,DS
 	typename Layout::Node *t = getNode(tail,false).first,
 		*h = getNode(head,false).first;
 	if(!t)
-		throw IncrEdgeTailDoesNotExist(tail.c_str());
+		throw IncrEdgeTailDoesNotExist(tail);
 	if(!h)
-		throw IncrEdgeHeadDoesNotExist(head.c_str());
+		throw IncrEdgeHeadDoesNotExist(head);
 	return getEdge(name,t,h,create);
 }
 template<typename Layout>
@@ -232,7 +230,7 @@ bool DynaView<Layout>::maybe_go() {
     if(locks>0)
         return false;
 	bool ch = false;
-    while(!Q.Empty()) {
+	while(!Q.Empty() || igd<Update>(Q.ModGraph()).flags || igd<StrAttrChanges>(Q.ModGraph()).size()) {
         dgserver->Process(Q);
         if(m_replacementFlag) {
             completeReplacement();
@@ -261,50 +259,36 @@ Update DynaView<Layout>::open_layout(const StrAttrs &attrs) {
             if(ai->second!=gd<StrAttrs>(&current)["engines"])
                 create = true;
     }
-    Update ret = stringsIn(m_transform,m_useDotDefaults,&layout,attrs,false);
+	Update ret = stringsIn(m_transform,m_useDotDefaults,Q.ModGraph(),attrs,false);
     if(create)
         createServer();
     return ret;
 }
 template<typename Layout>
-bool DynaView<Layout>::incr_ev_open_graph(DString graph,const StrAttrs &attrs) {
-	bool isModify = false;
-    if(dgserver) {
-        if(!m_allowOneReopen)
-            throw IncrReopenXep(graph.c_str());
-        m_allowOneReopen = false;
-		isModify = true;
-    }
-
+void DynaView<Layout>::incr_ev_open_graph(DString graph,const StrAttrs &attrs) {
+    if(dgserver)
+        throw IncrReopenXep(graph);
     open_layout(attrs);
-    if(!dgserver)
-        return false;
     incr_set_handler(gd<Name>(&layout) = graph,this);
-	std::cout << (isModify?"modify":"open") << " graph " << graph << " " << gd<StrAttrs2>(&layout) << std::endl;
-	gd<StrAttrChanges>(&layout).clear();
-    return true;
+	IncrOpen();
 }
 template<typename Layout>
-bool DynaView<Layout>::incr_ev_close_graph() {
-    std::cout << "close graph " << gd<Name>(&layout) << std::endl;
-    return true;
+void DynaView<Layout>::incr_ev_close_graph() {
+	IncrClose();
 }
 template<typename Layout>
-bool DynaView<Layout>::incr_ev_mod_graph(const StrAttrs &attrs) {
+void DynaView<Layout>::incr_ev_mod_graph(const StrAttrs &attrs) {
     ModifyFlags(Q) |= open_layout(attrs);
     maybe_go();
-    return true;
 }
 template<typename Layout>
-bool DynaView<Layout>::incr_ev_lock() {
+void DynaView<Layout>::incr_ev_lock() {
     locks++;
-    return true;
 }
 template<typename Layout>
-bool DynaView<Layout>::incr_ev_unlock() {
+void DynaView<Layout>::incr_ev_unlock() {
     --locks;
     maybe_go();
-    return true;
 }
 template<typename Layout>
 DString DynaView<Layout>::incr_ev_ins_node(DString name, const StrAttrs &attrs, bool merge) {
@@ -317,13 +301,14 @@ DString DynaView<Layout>::incr_ev_ins_node(DString name, const StrAttrs &attrs, 
         gd<StrAttrs>(nb.first)["label"] = name;
         rename = gd<Name>(nb.first);
     }
-    Update upd = stringsIn<Layout>(m_transform,nb.first,attrs,true);
-    if(nb.second) {
-        Q.InsNode(nb.first);
-        IncrNewNode(nb.first);
-    }
+	Layout::Node *n = nb.second
+		?Q.InsNode(nb.first)
+		:Q.ModNode(nb.first);
+    Update upd = stringsIn<Layout>(m_transform,n,attrs,true);
+    if(nb.second)
+        IncrNewNode(n);
 	else 
-        ModifyNode(Q,nb.first,upd);
+        ModifyNode(Q,n,upd);
     maybe_go();
     return rename;
 }
@@ -331,74 +316,80 @@ template<typename Layout>
 DString DynaView<Layout>::incr_ev_ins_edge(DString name, DString tailname, DString headname, const StrAttrs &attrs) {
     std::pair<typename Layout::Edge*,bool> eb = getEdge(name,tailname,headname,true);
 	if(!eb.second&&gd<Name>(eb.first)!=name)
-		throw IncrEdgeNameMismatch(name.c_str());
-    Update upd = stringsIn<Layout>(m_transform,eb.first,attrs,true);
-    if(eb.second) {
-        Q.InsEdge(eb.first);
-        IncrNewEdge(eb.first);
-    }
+		throw IncrEdgeNameMismatch(name);
+	Layout::Edge *e = eb.second
+		?Q.InsEdge(eb.first)
+		:Q.ModEdge(eb.first);
+    Update upd = stringsIn<Layout>(m_transform,e,attrs,true);
+    if(eb.second)
+        IncrNewEdge(e);
     else
-        ModifyEdge(Q,eb.first,upd);
+        ModifyEdge(Q,e,upd);
     maybe_go();
     return gd<Name>(eb.first);
 }
 template<typename Layout>
-bool DynaView<Layout>::incr_ev_mod_node(DString name,const StrAttrs &attrs) {
+void DynaView<Layout>::incr_ev_mod_node(DString name,const StrAttrs &attrs) {
     typename Layout::Node *n = getNode(name).first;
     if(!n)
-        throw IncrNodeDoesNotExist(name.c_str());
+        throw IncrNodeDoesNotExist(name);
+	if(typename Layout::Node *mn = Q.ModNode(n))
+		n = mn;
+	else if(typename Layout::Node *in = Q.insN.find(n))
+		n = in;
+	else
+		throw IncrNodeDoesNotExist(name);
     ModifyNode(Q,n,stringsIn<Layout>(m_transform,n,attrs,false));
     maybe_go();
-    return true;
 }
 template<typename Layout>
-bool DynaView<Layout>::incr_ev_mod_edge(DString name,const StrAttrs &attrs) {
+void DynaView<Layout>::incr_ev_mod_edge(DString name,const StrAttrs &attrs) {
     typename Layout::Edge *e = getEdge(name);
     if(!e)
-        throw IncrEdgeDoesNotExist(name.c_str());
+        throw IncrEdgeDoesNotExist(name);
+	if(typename Layout::Edge *me = Q.ModEdge(e))
+		e = me;
+	else if(typename Layout::Edge *ie = Q.insE.find(e))
+		e = ie;
+	else
+		throw IncrEdgeDoesNotExist(name);
     ModifyEdge(Q,e,stringsIn<Layout>(m_transform,e,attrs,false));
     maybe_go();
-    return true;
 }
 template<typename Layout>
-bool DynaView<Layout>::incr_ev_del_node(DString name) {
+void DynaView<Layout>::incr_ev_del_node(DString name) {
 	typename Layout::Node *n = getNode(name).first;
     if(!n)
-        throw IncrNodeDoesNotExist(name.c_str());
+        throw IncrNodeDoesNotExist(name);
     Q.DelNode(n);
     maybe_go();
-    return true;
 }
 template<typename Layout>
-bool DynaView<Layout>::incr_ev_del_edge(DString name) {
+void DynaView<Layout>::incr_ev_del_edge(DString name) {
     typename Layout::Edge *e = getEdge(name);
     if(!e)
-        throw IncrEdgeDoesNotExist(name.c_str());
+        throw IncrEdgeDoesNotExist(name);
     Q.DelEdge(e);
     maybe_go();
-    return true;
 }
 template<typename Layout>
-bool DynaView<Layout>::incr_ev_req_graph() {
+void DynaView<Layout>::incr_ev_req_graph() {
 	std::cout << "fulfil graph " << gd<Name>(&layout) << std::endl;
 	emitGraph(std::cout,&layout);
-    return true;
 }
 template<typename Layout>
-bool DynaView<Layout>::incr_ev_req_node(DString name) {
+void DynaView<Layout>::incr_ev_req_node(DString name) {
     typename Layout::Node *n = getNode(name).first;
     if(!n)
-        throw IncrNodeDoesNotExist(name.c_str());
-	std::cout << "fulfil node " << gd<Name>(&layout) << " " << name << " " << gd<StrAttrs>(n);
-    return true;
+        throw IncrNodeDoesNotExist(name);
+	std::cout << "fulfil node " << gd<Name>(&layout) << " " << name << " " << gd<StrAttrs>(n) << std::endl;
 }
 template<typename Layout>
-bool DynaView<Layout>::incr_ev_req_edge(DString name) {
+void DynaView<Layout>::incr_ev_req_edge(DString name) {
     typename Layout::Edge *e = getEdge(name);
     if(!e)
-        throw IncrEdgeDoesNotExist(name.c_str());
-    std::cout << "fulfil edge " << gd<Name>(&layout) << " " << name << " " << gd<StrAttrs>(e);
-    return true;
+        throw IncrEdgeDoesNotExist(name);
+	std::cout << "fulfil edge " << gd<Name>(&layout) << " " << name << " " << gd<StrAttrs>(e) << std::endl;
 }
 template<typename Layout>
 void DynaView<Layout>::incr_ev_load_strgraph(StrGraph *sg,bool merge, bool del) {

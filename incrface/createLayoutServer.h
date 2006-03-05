@@ -58,8 +58,10 @@ ChangeProcessor<Layout> *createLayoutServer(Layout *client,Layout *current) {
 	eng->actors.push_back(fcrbefore);
 	eng->actors.push_back(new UpdateCurrentProcessor<Layout>(client,current)); 
 	DString engines = gd<StrAttrs>(client)["engines"];
-	if(engines.empty())
+	if(engines.empty()) {
+		delete eng;
 		throw DGException("engine(s) were not specified on call to createLayoutServer");
+	}
     //gd<StrAttrs>(client)["agecolors"] = "green,blue,black";
     std::vector<DString> engs;
     breakList(engines,engs);
@@ -71,8 +73,8 @@ ChangeProcessor<Layout> *createLayoutServer(Layout *client,Layout *current) {
 			std::cout << the_creators.size() << " creators:" << std::endl;
 			for(typename creators<Layout>::iterator ci = the_creators.begin(); ci!=the_creators.end(); ++ci)
 				std::cout << reinterpret_cast<int>(ci->first.c_str()) << " " << ci->first << " -> " << ci->second << std::endl;
-			delete eng;
 			*/
+			delete eng;
 			throw DGException2("engine name not known or not appropriate for graph type",*ei);
 		}
 		ChangeProcessor<Layout> *server = crea(client,current);

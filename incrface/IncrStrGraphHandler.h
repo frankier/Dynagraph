@@ -34,24 +34,24 @@ struct IncrStrGraphHandler : IncrLangEvents {
 
     // IncrLangEvents
 	DString dinotype() { return "stringraph"; }
-	bool incr_ev_open_graph(DString graph,const StrAttrs &attrs);
-	bool incr_ev_close_graph();
-	bool incr_ev_mod_graph(const StrAttrs &attrs);
-	bool incr_ev_lock();
-	bool incr_ev_unlock();
+	void incr_ev_open_graph(DString graph,const StrAttrs &attrs);
+	void incr_ev_close_graph();
+	void incr_ev_mod_graph(const StrAttrs &attrs);
+	void incr_ev_lock();
+	void incr_ev_unlock();
 	DString incr_ev_ins_node(DString name, const StrAttrs &attrs, bool merge);
 	DString incr_ev_ins_edge(DString name, DString tailname, DString headname, const StrAttrs &attrs);
-	bool incr_ev_mod_node(DString name,const StrAttrs &attrs);
-	bool incr_ev_mod_edge(DString name,const StrAttrs &attrs);
-	bool incr_ev_del_node(DString name);
-	bool incr_ev_del_edge(DString name);
-	bool incr_ev_req_graph();
-	bool incr_ev_req_node(DString name);
-	bool incr_ev_req_edge(DString name);
+	void incr_ev_mod_node(DString name,const StrAttrs &attrs);
+	void incr_ev_mod_edge(DString name,const StrAttrs &attrs);
+	void incr_ev_del_node(DString name);
+	void incr_ev_del_edge(DString name);
+	void incr_ev_req_graph();
+	void incr_ev_req_node(DString name);
+	void incr_ev_req_edge(DString name);
     void incr_ev_load_strgraph(StrGraph *sg,bool merge, bool del);
 };
 
-// make changes immediately but only fire DinoInternalChanges when unlocked
+// make changes immediately but only Process them when unlocked
 template<typename NGraph>
 bool IncrStrGraphHandler<NGraph>::maybe_go() {
     if(locks>0)
@@ -61,34 +61,29 @@ bool IncrStrGraphHandler<NGraph>::maybe_go() {
     return true;
 }
 template<typename NGraph>
-bool IncrStrGraphHandler<NGraph>::incr_ev_open_graph(DString graph,const StrAttrs &attrs) {
-    gd<Name>(g) = graph;
-    incr_set_handler(graph,this);
+void IncrStrGraphHandler<NGraph>::incr_ev_open_graph(DString graph,const StrAttrs &attrs) {
+    gd<Name>(&world_) = graph;
+    gd<StrAttrs>(&world_) = attrs;
+    maybe_go();
+}
+template<typename NGraph>
+void IncrStrGraphHandler<NGraph>::incr_ev_close_graph() {
+}
+template<typename NGraph>
+void IncrStrGraphHandler<NGraph>::incr_ev_mod_graph(const StrAttrs &attrs) {
+	for(StrAttrs::const_iterator ai = attrs.begin(); ai!=attrs.end(); ++ai)
+		gd<StrAttrs2>(
     gd<StrAttrs>(g) = attrs;
     maybe_go();
-    return true;
 }
 template<typename NGraph>
-
-bool IncrStrGraphHandler<NGraph>::incr_ev_close_graph() {
-    return true;
-}
-template<typename NGraph>
-bool IncrStrGraphHandler<NGraph>::incr_ev_mod_graph(const StrAttrs &attrs) {
-    gd<StrAttrs>(g) = attrs;
-    maybe_go();
-    return true;
-}
-template<typename NGraph>
-bool IncrStrGraphHandler<NGraph>::incr_ev_lock() {
+void IncrStrGraphHandler<NGraph>::incr_ev_lock() {
     locks++;
-    return true;
 }
 template<typename NGraph>
-bool IncrStrGraphHandler<NGraph>::incr_ev_unlock() {
+void IncrStrGraphHandler<NGraph>::incr_ev_unlock() {
     --locks;
     maybe_go();
-    return true;
 }
 template<typename NGraph>
 DString IncrStrGraphHandler<NGraph>::incr_ev_ins_node(DString name, const StrAttrs &attrs, bool merge) {
@@ -109,7 +104,7 @@ DString IncrStrGraphHandler<NGraph>::incr_ev_ins_edge(DString name, DString tail
     return name;
 }
 template<typename NGraph>
-bool IncrStrGraphHandler<NGraph>::incr_ev_mod_node(DString name,const StrAttrs &attrs) {
+void IncrStrGraphHandler<NGraph>::incr_ev_mod_node(DString name,const StrAttrs &attrs) {
     typename NGraph::Node *n = g->ndict[name];
     if(!n)
         throw IncrNodeDoesNotExist(name);
@@ -118,7 +113,7 @@ bool IncrStrGraphHandler<NGraph>::incr_ev_mod_node(DString name,const StrAttrs &
     return true;
 }
 template<typename NGraph>
-bool IncrStrGraphHandler<NGraph>::incr_ev_mod_edge(DString name,const StrAttrs &attrs) {
+void IncrStrGraphHandler<NGraph>::incr_ev_mod_edge(DString name,const StrAttrs &attrs) {
     typename NGraph::Edge *e = g->edict[name];
     if(!e)
         throw IncrEdgeDoesNotExist(name);
@@ -127,34 +122,34 @@ bool IncrStrGraphHandler<NGraph>::incr_ev_mod_edge(DString name,const StrAttrs &
     return true;
 }
 template<typename NGraph>
-bool IncrStrGraphHandler<NGraph>::incr_ev_del_node(DString name) {
+void IncrStrGraphHandler<NGraph>::incr_ev_del_node(DString name) {
     typename NGraph::Node *n = g->ndict[name];
     if(!n)
-        throw AbGNodeUnknown(name.c_str());
+        throw AbGNodeUnknown(name);
     g->erase(n);
     maybe_go();
     return true;
 }
 template<typename NGraph>
-bool IncrStrGraphHandler<NGraph>::incr_ev_del_edge(DString name) {
+void IncrStrGraphHandler<NGraph>::incr_ev_del_edge(DString name) {
     typename NGraph::Edge *e = g->edict[name];
     if(!e)
-        throw AbGEdgeUnknown(name.c_str());
+        throw AbGEdgeUnknown(name);
     g->erase(e);
     maybe_go();
     return true;
 }
 // NO
 template<typename NGraph>
-bool IncrStrGraphHandler<NGraph>::incr_ev_req_graph() {
+void IncrStrGraphHandler<NGraph>::incr_ev_req_graph() {
     return false;
 }
 template<typename NGraph>
-bool IncrStrGraphHandler<NGraph>::incr_ev_req_node(DString name) {
+void IncrStrGraphHandler<NGraph>::incr_ev_req_node(DString name) {
     return false;
 }
 template<typename NGraph>
-bool IncrStrGraphHandler<NGraph>::incr_ev_req_edge(DString name) {
+void IncrStrGraphHandler<NGraph>::incr_ev_req_edge(DString name) {
     return false;
 }
 template<typename NGraph>

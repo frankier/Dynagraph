@@ -66,6 +66,7 @@ inline std::ostream &operator <<(std::ostream &os,const StrAttrs &attrs) {
 	return os;
 }
 typedef std::set<DString> StrAttrChanges;
+/*
 struct StrAttrs2 : StrAttrs,StrAttrChanges { // sorry, don't know what else to call it
 	bool put(DString name,DString val) {
 		StrAttrs &attrs = *this;
@@ -86,9 +87,30 @@ struct StrAttrs2 : StrAttrs,StrAttrChanges { // sorry, don't know what else to c
 		return ret;
 	}
 };
-inline std::ostream &operator << (std::ostream &os,StrAttrs2 &sa2) {
-	StrAttrChanges &cha = sa2;
-	StrAttrs &att = sa2;
+*/
+template<typename GO>
+inline bool SetAndMark(GO *go,DString name,DString val) {
+	DString &cur = gd<StrAttrs>(go)[name];
+	if(cur!=val) {
+		cur = val;
+		igd<StrAttrChanges>(go).insert(name);
+		return true;
+	}
+	return false;
+}
+template<typename GO>
+struct Changes {
+	GO *go;
+	Changes(GO *go) : go(go) {}
+};
+template<typename GO>
+Changes<GO> changes(GO *go) {
+	return Changes<GO>(go);
+}
+template<typename GO>	
+inline std::ostream &operator << (std::ostream &os,Changes<GO> &cgo) {
+	StrAttrChanges &cha = igd<StrAttrChanges>(cgo.go);
+	StrAttrs &att = gd<StrAttrs>(cgo.go);
 	os << "[";
 	for(StrAttrChanges::const_iterator ci = cha.begin(); ci!=cha.end(); ++ci) {
 	  if(ci!=cha.begin())
@@ -145,9 +167,9 @@ struct EdgeNotFound : DGException {
   {}
 };
 
-template<class GData,class NData,class EData>
-struct NamedGraph : LGraph<ADTisCDT,GData,NData,EData> {
-    typedef LGraph<ADTisCDT,GData,NData,EData> Graph;
+template<class GData,class NData,class EData,class GIData=Nothing,class NIData=Nothing,class EIData=Nothing>
+struct NamedGraph : LGraph<ADTisCDT,GData,NData,EData,GIData,NIData,EIData> {
+    typedef LGraph<ADTisCDT,GData,NData,EData,GIData,NIData,EIData> Graph;
 	// as we all should know by now, deriving a class and adding a dictionary isn't all
 	// that good an idea.  this class is no exception; to make this work, gotta call
 	// oopsRefreshDictionary() before you need the ndict to work.  what's next?  LGraph events?

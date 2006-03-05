@@ -43,15 +43,15 @@ struct ChangeQueue {
 		modE = copy.modE;
 		delE = copy.delE;
 	}
-	void InsNode(typename Graph::Node *n) {
+	typename Graph::Node *InsNode(typename Graph::Node *n) {
 		if(current->find(n))
 			throw InsertInserted();
-		insN.insert(n);
+		return insN.insert(n).first;
 	}
-	void InsEdge(typename Graph::Edge *e) {
+	typename Graph::Edge *InsEdge(typename Graph::Edge *e) {
 		if(current->find(e))
 			throw InsertInserted();
-		insE.insert(e);
+		return insE.insert(e).first;
 	}
 	typename Graph::Node *ModNode(typename Graph::Node *n) {
 		if(!insN.find(n) && !delN.find(n)) 
@@ -63,19 +63,22 @@ struct ChangeQueue {
 			return modE.insert(e).first;
 		return 0;
 	}
-	void DelNode(typename Graph::Node *n) {
+	Graph *ModGraph() {
+		return &modN;
+	}
+	typename Graph::Node *DelNode(typename Graph::Node *n) {
 		insN.erase(n);
 		modN.erase(n);
-		delN.insert(n);
 		n = current->find(n); // remove edges that are currently inserted
 		for(typename Graph::nodeedge_iter i = n->alledges().begin(); i!=n->alledges().end(); ++i)
 			DelEdge(*i);
+		return delN.insert(n).first;
 	}
 
-	void DelEdge(typename Graph::Edge *e) {
+	typename Graph::Edge *DelEdge(typename Graph::Edge *e) {
 		insE.erase(e);
 		modE.erase(e);
-		delE.insert(e);
+		return delE.insert(e).first;
 	}
 
 	// called by server to update current subgraph based on current changes

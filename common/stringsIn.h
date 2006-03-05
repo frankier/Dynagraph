@@ -38,7 +38,7 @@ Update stringsIn(Transform *trans,bool useDotDefaults,Layout *l,const StrAttrs &
 	StrAttrs allChanges = attrs;
 	if(clearOld)
 		clearRemoved(gd<StrAttrs>(l),attrs,allChanges);
-    StrAttrs2 &att = gd<StrAttrs2>(l);
+    StrAttrs &att = gd<StrAttrs>(l);
     ensureAttr(att,allChanges,"resolution");
     ensureAttr(att,allChanges,"separation");
     ensureAttr(att,allChanges,"defaultsize");
@@ -70,7 +70,7 @@ Update stringsIn(Transform *trans,bool useDotDefaults,Layout *l,const StrAttrs &
 			istringstream s(value);
 			s >> gd<GraphGeom>(l).ticks;
 		}
-		att.put(ai->first,value);
+		SetAndMark(l,ai->first,value);
 	}
 	return 0;
 }
@@ -78,11 +78,10 @@ template<typename Layout>
 Update assureAttrs(Transform *trans,typename Layout::Node *n) {
 	Update ret;
 	StrAttrs &att = gd<StrAttrs>(n);
-	StrAttrs2 &att2 = gd<StrAttrs2>(n);
 	DString &shape = att["shape"];
 	if(shape.empty()) {
         DString value = (att.find("sides")!=att.end())?"polygon":"ellipse";
-        if(att2.put("shape",value))
+        if(SetAndMark(n,"shape",value))
 		    ret.flags |= DG_UPD_REGION;
 	}
 	StrAttrs::iterator ai;
@@ -115,9 +114,9 @@ Update assureAttrs(Transform *trans,typename Layout::Node *n) {
 	}
 	char buf[20];
 	sprintf(buf,"%f",size.x);
-	bool ch = att2.put("width",buf);
+	bool ch = SetAndMark(n,"width",buf);
 	sprintf(buf,"%f",size.y);
-	ch |= att2.put("height",buf);
+	ch |= SetAndMark(n,"height",buf);
     if(ch)
 	    ret.flags |= DG_UPD_REGION;
 	return ret;
@@ -173,7 +172,7 @@ Update stringsIn(Transform *trans,typename Layout::Node *n,const StrAttrs &attrs
 				ret.flags |= DG_UPD_LABEL;
 			}
 		}
-		gd<StrAttrs2>(n).put(ai->first,ai->second);
+		SetAndMark(n,ai->first,ai->second);
 	}
 	ret.flags |= assureAttrs<Layout>(trans,n).flags;
 	if(ret.flags&(DG_UPD_REGION|DG_UPD_POLYDEF)) {
@@ -271,7 +270,7 @@ Update stringsIn(Transform *trans,typename Layout::Edge *e,const StrAttrs &attrs
 				skip = true;
 		}
 		if(!skip)
-			gd<StrAttrs2>(e).put(ai->first,ai->second);
+			SetAndMark(e,ai->first,ai->second);
 	}
 	return ret;
 }

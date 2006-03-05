@@ -62,6 +62,13 @@ struct TextView : DynaView<Layout> {
 		ModifyFlags(this->Q) = 0;
 		doOutdot(&this->current);
 	}
+	void IncrOpen() {
+		std::cout << "open graph " << gd<Name>(&this->layout) << " " << gd<StrAttrs>(&this->layout) << std::endl;
+		igd<StrAttrChanges>(Q.ModGraph()).clear();
+	}
+	void IncrClose() {
+	    std::cout << "close graph " << gd<Name>(&this->layout) << std::endl;
+	}
 	void IncrNewNode(typename Layout::Node *n) {}
 	void IncrNewEdge(typename Layout::Edge *e) {}
 	TextView(Name name) : DynaView<Layout>(name,g_transform,g_useDotDefaults) {}
@@ -90,20 +97,20 @@ struct IncrCalledBack : IncrCallbacks {
 			else if(engines.find("fdp",0)!=DString::npos)
 				type = "fdp";
 			else
-				throw DGException2("could not deduce graph type from engine list",engines.c_str());
+				throw DGException2("could not deduce graph type from engine list",engines);
 		}
 		IncrLangEvents *ret;
 		if(type=="dynadag") {
 			TextView<DynaDAGLayout> *view = new TextView<DynaDAGLayout>(name);
-			if(setEngs)
-				gd<StrAttrs2>(&view->layout).put("engines",setEngs);
 			ret = view;
+			if(setEngs)
+				SetAndMark(view->Q.ModGraph(),"engines",setEngs);
 		}
 		else if(type=="fdp") {
 			TextView<FDPLayout> *view = new TextView<FDPLayout>(name);
-			if(setEngs)
-				gd<StrAttrs2>(&view->layout).put("engines",setEngs);
 			ret = view;
+			if(setEngs)
+				SetAndMark(view->Q.ModGraph(),"engines",setEngs);
 		}
     	return ret;
 	}

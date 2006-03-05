@@ -638,6 +638,9 @@ public:
 	void clear() {
 		while(!nodes().empty())
 			erase_node(*nodes().begin());
+		if(!parent)
+			*dat = GraphDatum();
+		idat = GraphIDat();
 	}
 	void check_common_parent(const LGraph &g) {
 		const LGraph *p,*p2;

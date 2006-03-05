@@ -20,10 +20,10 @@
 namespace Dynagraph {
 
 struct AbGNodeUnknown : DGException2 {
-    AbGNodeUnknown(const char *name) : DGException2("tried to modify unknown node",name) {}
+    AbGNodeUnknown(DString name) : DGException2("tried to modify unknown node",name) {}
 };
 struct AbGEdgeUnknown : DGException2 {
-    AbGEdgeUnknown(const char *name) : DGException2("tried to modify unknown edge",name) {}
+    AbGEdgeUnknown(DString name) : DGException2("tried to modify unknown edge",name) {}
 };
 template<typename NGraph> // some graph supporting attributes of StrGraph
 struct AbsGraphHandler : IncrLangEvents {
@@ -42,20 +42,20 @@ struct AbsGraphHandler : IncrLangEvents {
     bool maybe_go();
     // IncrLangEvents
 	DString dinotype() { return "abstract"; }
-	bool incr_ev_open_graph(DString graph,const StrAttrs &attrs);
-	bool incr_ev_close_graph();
-	bool incr_ev_mod_graph(const StrAttrs &attrs);
-	bool incr_ev_lock();
-	bool incr_ev_unlock();
+	void incr_ev_open_graph(DString graph,const StrAttrs &attrs);
+	void incr_ev_close_graph();
+	void incr_ev_mod_graph(const StrAttrs &attrs);
+	void incr_ev_lock();
+	void incr_ev_unlock();
 	DString incr_ev_ins_node(DString name, const StrAttrs &attrs, bool merge);
 	DString incr_ev_ins_edge(DString name, DString tailname, DString headname, const StrAttrs &attrs);
-	bool incr_ev_mod_node(DString name,const StrAttrs &attrs);
-	bool incr_ev_mod_edge(DString name,const StrAttrs &attrs);
-	bool incr_ev_del_node(DString name);
-	bool incr_ev_del_edge(DString name);
-	bool incr_ev_req_graph();
-	bool incr_ev_req_node(DString name);
-	bool incr_ev_req_edge(DString name);
+	void incr_ev_mod_node(DString name,const StrAttrs &attrs);
+	void incr_ev_mod_edge(DString name,const StrAttrs &attrs);
+	void incr_ev_del_node(DString name);
+	void incr_ev_del_edge(DString name);
+	void incr_ev_req_graph();
+	void incr_ev_req_node(DString name);
+	void incr_ev_req_edge(DString name);
     void incr_ev_load_strgraph(StrGraph *sg,bool merge, bool del);
 };
 
@@ -68,36 +68,31 @@ bool AbsGraphHandler<NGraph>::maybe_go() {
     return true;
 }
 template<typename NGraph>
-bool AbsGraphHandler<NGraph>::incr_ev_open_graph(DString graph,const StrAttrs &attrs) {
+void AbsGraphHandler<NGraph>::incr_ev_open_graph(DString graph,const StrAttrs &attrs) {
     if(graph.empty())
         graph = randomName('g');
     gd<Name>(g) = graph;
     incr_set_handler(graph,this);
     gd<StrAttrs>(g) = attrs;
     maybe_go();
-    return true;
 }
 template<typename NGraph>
 
-bool AbsGraphHandler<NGraph>::incr_ev_close_graph() {
-    return true;
+void AbsGraphHandler<NGraph>::incr_ev_close_graph() {
 }
 template<typename NGraph>
-bool AbsGraphHandler<NGraph>::incr_ev_mod_graph(const StrAttrs &attrs) {
+void AbsGraphHandler<NGraph>::incr_ev_mod_graph(const StrAttrs &attrs) {
     gd<StrAttrs>(g) = attrs;
     maybe_go();
-    return true;
 }
 template<typename NGraph>
-bool AbsGraphHandler<NGraph>::incr_ev_lock() {
+void AbsGraphHandler<NGraph>::incr_ev_lock() {
     locks++;
-    return true;
 }
 template<typename NGraph>
-bool AbsGraphHandler<NGraph>::incr_ev_unlock() {
+void AbsGraphHandler<NGraph>::incr_ev_unlock() {
     --locks;
     maybe_go();
-    return true;
 }
 template<typename NGraph>
 DString AbsGraphHandler<NGraph>::incr_ev_ins_node(DString name, const StrAttrs &attrs, bool merge) {
@@ -118,53 +113,46 @@ DString AbsGraphHandler<NGraph>::incr_ev_ins_edge(DString name, DString tailname
     return name;
 }
 template<typename NGraph>
-bool AbsGraphHandler<NGraph>::incr_ev_mod_node(DString name,const StrAttrs &attrs) {
+void AbsGraphHandler<NGraph>::incr_ev_mod_node(DString name,const StrAttrs &attrs) {
     typename NGraph::Node *n = g->ndict[name];
     if(!n)
-        throw AbGNodeUnknown(name.c_str());
+        throw AbGNodeUnknown(name);
     gd<StrAttrs>(n) += attrs;
     maybe_go();
-    return true;
 }
 template<typename NGraph>
-bool AbsGraphHandler<NGraph>::incr_ev_mod_edge(DString name,const StrAttrs &attrs) {
+void AbsGraphHandler<NGraph>::incr_ev_mod_edge(DString name,const StrAttrs &attrs) {
     typename NGraph::Edge *e = g->edict[name];
     if(!e)
-        throw AbGEdgeUnknown(name.c_str());
+        throw AbGEdgeUnknown(name);
     gd<StrAttrs>(e) += attrs;
     maybe_go();
-    return true;
 }
 template<typename NGraph>
-bool AbsGraphHandler<NGraph>::incr_ev_del_node(DString name) {
+void AbsGraphHandler<NGraph>::incr_ev_del_node(DString name) {
     typename NGraph::Node *n = g->ndict[name];
     if(!n)
-        throw AbGNodeUnknown(name.c_str());
+        throw AbGNodeUnknown(name);
     g->erase(n);
     maybe_go();
-    return true;
 }
 template<typename NGraph>
-bool AbsGraphHandler<NGraph>::incr_ev_del_edge(DString name) {
+void AbsGraphHandler<NGraph>::incr_ev_del_edge(DString name) {
     typename NGraph::Edge *e = g->edict[name];
     if(!e)
-        throw AbGEdgeUnknown(name.c_str());
+        throw AbGEdgeUnknown(name);
     g->erase(e);
     maybe_go();
-    return true;
 }
 // NO
 template<typename NGraph>
-bool AbsGraphHandler<NGraph>::incr_ev_req_graph() {
-    return false;
+void AbsGraphHandler<NGraph>::incr_ev_req_graph() {
 }
 template<typename NGraph>
-bool AbsGraphHandler<NGraph>::incr_ev_req_node(DString name) {
-    return false;
+void AbsGraphHandler<NGraph>::incr_ev_req_node(DString name) {
 }
 template<typename NGraph>
-bool AbsGraphHandler<NGraph>::incr_ev_req_edge(DString name) {
-    return false;
+void AbsGraphHandler<NGraph>::incr_ev_req_edge(DString name) {
 }
 template<typename NGraph>
 struct we_do_what_were_told {

@@ -49,25 +49,23 @@ DString DinoMachineHandler::incr_ev_ins_edge(DString name, DString tailname, DSt
     }
     return ret;
 }
-bool DinoMachineHandler::incr_ev_mod_node(DString name,const StrAttrs &attrs) {
-    bool ret = AbsGraphHandler<DinoMachine>::incr_ev_mod_node(name,attrs);
+void DinoMachineHandler::incr_ev_mod_node(DString name,const StrAttrs &attrs) {
+    AbsGraphHandler<DinoMachine>::incr_ev_mod_node(name,attrs);
     modify_node(name,attrs);
-    return ret;
 }
-bool DinoMachineHandler::incr_ev_mod_edge(DString name,const StrAttrs &attrs) {
-    bool ret = AbsGraphHandler<DinoMachine>::incr_ev_mod_edge(name,attrs);
+void DinoMachineHandler::incr_ev_mod_edge(DString name,const StrAttrs &attrs) {
+    AbsGraphHandler<DinoMachine>::incr_ev_mod_edge(name,attrs);
     modify_edge(name,attrs);
-    return ret;
 }
-bool DinoMachineHandler::incr_ev_del_node(DString name) {
-    return incr_ev_del_node(name);
+void DinoMachineHandler::incr_ev_del_node(DString name) {
+    AbsGraphHandler<DinoMachine>::incr_ev_del_node(name);
 }
-bool DinoMachineHandler::incr_ev_del_edge(DString name) {
+void DinoMachineHandler::incr_ev_del_edge(DString name) {
     DinoMachine::Edge *de = g->edict[name];
     if(!g->find_edge(de->head,de->tail))
         delete gd<DinoMachEdge>(de).mappings;
 
-    return incr_ev_del_edge(name);
+    AbsGraphHandler<DinoMachine>::incr_ev_del_edge(name);
 }
 void DinoMachineHandler::modify_node(DString name,const StrAttrs &attrs) {
 }

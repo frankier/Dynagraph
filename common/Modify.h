@@ -28,7 +28,7 @@ inline void ModifyEdge(ChangeQueue<Layout> &Q,typename Layout::Edge *e,Update up
 }
 template<typename Layout>
 inline Update &ModifyFlags(ChangeQueue<Layout> &Q) {
-	return igd<Update>(&Q.modN);
+	return igd<Update>(Q.ModGraph());
 }
 
 } // namespace Dynagraph
