@@ -198,7 +198,7 @@ struct LGraph {
 			else
 				return 0;
 		}
-		bool amMain() { return g->amMain(); }
+		bool am_main() { return g->am_main(); }
 		template<typename D>
 		D &gd() {
 			return *static_cast<D*>(dat);
@@ -333,10 +333,10 @@ struct LGraph {
 			return pseudo_seq<nodeedge_iter>(ne_iter(&nodeData_.m_ins,&nodeData_.m_outs),ne_iter(0,0));
 		};
 
-		int degree() {
+		size_t degree() {
 			return nodeData_.m_ins.size() + nodeData_.m_outs.size();
 		}
-		bool amMain() { return g->amMain(); }
+		bool am_main() { return g->am_main(); }
 		inedge_iter inIter(Edge *e) {
 			if(e->head!=this)
 				throw WrongNode();
@@ -463,16 +463,6 @@ public:
 		typename outedge_order::iterator ei;
 		LGraph *g;
 	};
-	/*
-	template<typename D>
-	D &gd() {
-		return *static_cast<D*>(dat);
-	}
-	template<typename D>
-	D &igd() {
-		return static_cast<D&>(idat);
-	}
-	*/
 	pseudo_seq<graphedge_iter> edges() {
 		return pseudo_seq<graphedge_iter>(graphedge_iter(this),graphedge_iter(0));
 	}
@@ -547,7 +537,7 @@ public:
 		return insert_subedge(e);
 	}
 	// methods available on both graphs and subgraphs
-	bool amMain() {
+	bool am_main() {
 		return !parent;
 	}
 	bool empty() {
@@ -589,6 +579,21 @@ public:
 			delete e->dat;
         }
 		delete e;
+		return true;
+	}
+	// if this is end-nodes' only edge, erase them too
+	bool inducing_erase_edge(Edge *e) {
+		if(e->head->g!=this)
+			if(Edge *e2 = find_edgeimage(e))
+				e = e2;
+			else
+				return false;
+		Node *t = e->tail,*h = e->head;
+		erase(e);
+		if(t->degree()==0)
+			erase(t);
+		if(h->degree()==0)
+			erase(h);
 		return true;
 	}
 	bool erase(Node *n) {

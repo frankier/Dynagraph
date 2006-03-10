@@ -99,6 +99,13 @@ inline bool SetAndMark(GO *go,DString name,DString val) {
 	return false;
 }
 template<typename GO>
+inline bool SetAndMark(GO *go,const StrAttrs &attrs) {
+	bool result = false;
+	for(StrAttrs::const_iterator ai = attrs.begin(); ai!=attrs.end(); ++ai)
+		result |= SetAndMark(go,ai->first,ai->second);
+	return result;
+}
+template<typename GO>
 struct Changes {
 	GO *go;
 	Changes(GO *go) : go(go) {}
@@ -127,35 +134,35 @@ struct NamedAttrs : StrAttrs,Name,Hit {
 struct DuplicateNodeName : DGException {
   DString name;
   DuplicateNodeName(DString name) :
-    DGException("names of StrGraph nodes must be unique",true),
+    DGException("names of StrGraph nodes must be unique"),
     name(name)
   {}
 };
 struct DuplicateEdgeName : DGException {
   DString name;
   DuplicateEdgeName(DString name) :
-    DGException("names of StrGraph edges must be unique",true),
+    DGException("names of StrGraph edges must be unique"),
     name(name)
   {}
 };
 struct ParallelEdgesUnsupported : DGException {
 	DString name;
 	ParallelEdgesUnsupported(DString name) :
-		DGException("LGraph does not allow multiple edges between the same tail and head",true),
+		DGException("LGraph does not allow multiple edges between the same tail and head"),
 		name(name)
 	{}
 };
 struct EndNodesDontMatch : DGException {
   DString name;
   EndNodesDontMatch(DString name) :
-    DGException("get_node on this edge with new end nodes",true),
+    DGException("get_edge on this edge with new end nodes"),
     name(name)
   {}
 };
 struct NodeNotFound : DGException {
   DString name;
   NodeNotFound(DString name) :
-    DGException("StrGraph::readSubgraph encountered a node not in the parent",true),
+    DGException("StrGraph::readSubgraph encountered a node not in the parent"),
     name(name)
   {}
 };

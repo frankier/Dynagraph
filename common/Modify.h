@@ -18,13 +18,15 @@ namespace Dynagraph {
 
 template<typename Layout>
 inline void ModifyNode(ChangeQueue<Layout> &Q,typename Layout::Node *n,Update upd) {
-	if(typename Layout::Node *n2 = Q.ModNode(n))
-		igd<Update>(n2) |= upd;
+	typename ChangeQueue<Layout>::NodeResult result = Q.ModNode(n);
+	if(result.action==ChangeQueue<Layout>::modified) 
+		igd<Update>(result.object) |= upd;
 }
 template<typename Layout>
 inline void ModifyEdge(ChangeQueue<Layout> &Q,typename Layout::Edge *e,Update upd) {
-	if(typename Layout::Edge *e2 = Q.ModEdge(e))
-		igd<Update>(e2) |= upd;
+	typename ChangeQueue<Layout>::EdgeResult result = Q.ModEdge(e);
+	if(result.action==ChangeQueue<Layout>::modified)
+		igd<Update>(result.object) |= upd;
 }
 template<typename Layout>
 inline Update &ModifyFlags(ChangeQueue<Layout> &Q) {

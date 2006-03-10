@@ -241,6 +241,10 @@ bool DynaView<Layout>::maybe_go() {
             forget(*ei);
         for(typename Layout::node_iter ni = Q.delN.nodes().begin(); ni!=Q.delN.nodes().end(); ++ni)
             forget(*ni);
+        for(typename Layout::graphedge_iter ei = Q.unbornE.edges().begin(); ei!=Q.unbornE.edges().end(); ++ei)
+            forget(*ei);
+        for(typename Layout::node_iter ni = Q.unbornN.nodes().begin(); ni!=Q.unbornN.nodes().end(); ++ni)
+            forget(*ni);
         IncrHappened(); // must clear Q but the events might cause more changes
 		ch = true;
     }
@@ -301,14 +305,18 @@ DString DynaView<Layout>::incr_ev_ins_node(DString name, const StrAttrs &attrs, 
         gd<StrAttrs>(nb.first)["label"] = name;
         rename = gd<Name>(nb.first);
     }
-	Layout::Node *n = nb.second
+	// all this nonsense because we allow reinsert to modify (new behavior will reject reinsert)
+	bool isInsert = nb.second 
+		|| Q.delN.find(nb.first) 
+		|| Q.unbornN.find(nb.first);
+	typename ChangeQueue<Layout>::NodeResult result = isInsert
 		?Q.InsNode(nb.first)
 		:Q.ModNode(nb.first);
-    Update upd = stringsIn<Layout>(m_transform,n,attrs,true);
-    if(nb.second)
-        IncrNewNode(n);
+    Update upd = stringsIn<Layout>(m_transform,result.object,attrs,true);
+    if(isInsert)
+        IncrNewNode(result.object);
 	else 
-        ModifyNode(Q,n,upd);
+        ModifyNode(Q,result.object,upd);
     maybe_go();
     return rename;
 }
@@ -317,14 +325,17 @@ DString DynaView<Layout>::incr_ev_ins_edge(DString name, DString tailname, DStri
     std::pair<typename Layout::Edge*,bool> eb = getEdge(name,tailname,headname,true);
 	if(!eb.second&&gd<Name>(eb.first)!=name)
 		throw IncrEdgeNameMismatch(name);
-	Layout::Edge *e = eb.second
+	bool isInsert = eb.second 
+		|| Q.delE.find(eb.first)
+		|| Q.unbornE.find(eb.first);
+	typename ChangeQueue<Layout>::EdgeResult result = isInsert
 		?Q.InsEdge(eb.first)
 		:Q.ModEdge(eb.first);
-    Update upd = stringsIn<Layout>(m_transform,e,attrs,true);
-    if(eb.second)
-        IncrNewEdge(e);
+    Update upd = stringsIn<Layout>(m_transform,result.object,attrs,true);
+    if(isInsert)
+        IncrNewEdge(result.object);
     else
-        ModifyEdge(Q,e,upd);
+        ModifyEdge(Q,result.object,upd);
     maybe_go();
     return gd<Name>(eb.first);
 }
@@ -333,13 +344,8 @@ void DynaView<Layout>::incr_ev_mod_node(DString name,const StrAttrs &attrs) {
     typename Layout::Node *n = getNode(name).first;
     if(!n)
         throw IncrNodeDoesNotExist(name);
-	if(typename Layout::Node *mn = Q.ModNode(n))
-		n = mn;
-	else if(typename Layout::Node *in = Q.insN.find(n))
-		n = in;
-	else
-		throw IncrNodeDoesNotExist(name);
-    ModifyNode(Q,n,stringsIn<Layout>(m_transform,n,attrs,false));
+	typename ChangeQueue<Layout>::NodeResult result = Q.ModNode(n);
+    ModifyNode(Q,result.object,stringsIn<Layout>(m_transform,result.object,attrs,false));
     maybe_go();
 }
 template<typename Layout>
@@ -347,13 +353,8 @@ void DynaView<Layout>::incr_ev_mod_edge(DString name,const StrAttrs &attrs) {
     typename Layout::Edge *e = getEdge(name);
     if(!e)
         throw IncrEdgeDoesNotExist(name);
-	if(typename Layout::Edge *me = Q.ModEdge(e))
-		e = me;
-	else if(typename Layout::Edge *ie = Q.insE.find(e))
-		e = ie;
-	else
-		throw IncrEdgeDoesNotExist(name);
-    ModifyEdge(Q,e,stringsIn<Layout>(m_transform,e,attrs,false));
+	typename ChangeQueue<Layout>::EdgeResult result = Q.ModEdge(e);
+    ModifyEdge(Q,result.object,stringsIn<Layout>(m_transform,result.object,attrs,false));
     maybe_go();
 }
 template<typename Layout>

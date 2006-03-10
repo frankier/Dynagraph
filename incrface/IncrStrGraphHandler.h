@@ -71,9 +71,7 @@ void IncrStrGraphHandler<NGraph>::incr_ev_close_graph() {
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_mod_graph(const StrAttrs &attrs) {
-	for(StrAttrs::const_iterator ai = attrs.begin(); ai!=attrs.end(); ++ai)
-		gd<StrAttrs2>(
-    gd<StrAttrs>(g) = attrs;
+	SetAndMark(Q_.ModGraph(),attrs);
     maybe_go();
 }
 template<typename NGraph>
@@ -89,8 +87,9 @@ template<typename NGraph>
 DString IncrStrGraphHandler<NGraph>::incr_ev_ins_node(DString name, const StrAttrs &attrs, bool merge) {
     if(name.empty())
         name = randomName('n');
-    typename NGraph::Node *n = g->get_node(name);
-    gd<StrAttrs>(n) += attrs;
+    typename NGraph::Node *n = world_.get_node(name);
+	typename ChangeQueue<NGraph>::ResultNode result = Q_.InsNode(n);
+	SetAndMark(result.object,attrs);
     maybe_go();
     return name;
 }
@@ -98,8 +97,9 @@ template<typename NGraph>
 DString IncrStrGraphHandler<NGraph>::incr_ev_ins_edge(DString name, DString tailname, DString headname, const StrAttrs &attrs) {
     if(name.empty())
         name = randomName('e');
-    typename NGraph::Edge *e = g->get_edge(tailname,headname,name);
-    gd<StrAttrs>(e) += attrs;
+    typename NGraph::Edge *e = world_.get_edge(tailname,headname,name);
+	typename ChangeQueue<NGraph>::ResultEdge result = Q_.InsEdge(e);
+	SetAndMark(result.object,attrs);
     maybe_go();
     return name;
 }
@@ -108,7 +108,8 @@ void IncrStrGraphHandler<NGraph>::incr_ev_mod_node(DString name,const StrAttrs &
     typename NGraph::Node *n = g->ndict[name];
     if(!n)
         throw IncrNodeDoesNotExist(name);
-    gd<StrAttrs>(n) += attrs;
+	typename ChangeQueue<NGraph>::ResultNode result = Q_.ModNode(n);
+	SetAndMark(result.object,attrs);
     maybe_go();
     return true;
 }
@@ -117,7 +118,8 @@ void IncrStrGraphHandler<NGraph>::incr_ev_mod_edge(DString name,const StrAttrs &
     typename NGraph::Edge *e = g->edict[name];
     if(!e)
         throw IncrEdgeDoesNotExist(name);
-    gd<StrAttrs>(e) += attrs;
+	typename ChangeQueue<NGraph>::ResultEdge result = Q_.ModEdge(e);
+	SetAndMark(result.object,attrs);
     maybe_go();
     return true;
 }
@@ -125,8 +127,8 @@ template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_del_node(DString name) {
     typename NGraph::Node *n = g->ndict[name];
     if(!n)
-        throw AbGNodeUnknown(name);
-    g->erase(n);
+        throw IncrNodeDoesNotExist(name);
+	Q.DelNode(n);
     maybe_go();
     return true;
 }
@@ -134,28 +136,25 @@ template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_del_edge(DString name) {
     typename NGraph::Edge *e = g->edict[name];
     if(!e)
-        throw AbGEdgeUnknown(name);
-    g->erase(e);
+        throw IncrEdgeDoesNotExist(name);
+	Q.DelEdge(e);
     maybe_go();
     return true;
 }
 // NO
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_req_graph() {
-    return false;
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_req_node(DString name) {
-    return false;
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_req_edge(DString name) {
-    return false;
 }
 template<typename NGraph>
-struct we_do_what_were_told {
+struct we_do_what_we_are_told {
     IncrStrGraphHandler<NGraph> *hand;
-    we_do_what_were_told(IncrStrGraphHandler<NGraph> *hand) : hand(hand) {}
+    we_do_what_we_are_told(IncrStrGraphHandler<NGraph> *hand) : hand(hand) {}
     void ins(StrGraph::Node *n) {
         hand->incr_ev_ins_node(gd<Name>(n),gd<StrAttrs>(n),true);
     }
@@ -178,7 +177,7 @@ struct we_do_what_were_told {
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_load_strgraph(StrGraph *sg,bool merge, bool del) {
     assert(merge && del);
-    we_do_what_were_told<NGraph> react(this);
+    we_do_what_we_are_told<NGraph> react(this);
     incr_ev_lock();
     diff_strgraph(g,sg,react);
     incr_ev_unlock();

@@ -217,7 +217,7 @@ void stringsOut(Transform *trans,ChangeQueue<Layout> &Q) {
 		*/
 	}
 	if(ModifyFlags(Q).flags)
-		stringifyLayoutChanges(trans,Q.client,ModifyFlags(Q));
+		stringifyLayoutChanges(trans,Q.ModGraph(),ModifyFlags(Q));
 	typename Layout::node_iter ni;
 	typename Layout::graphedge_iter ei;
 	if(llchanged) {
