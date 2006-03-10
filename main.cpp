@@ -55,23 +55,22 @@ void doOutdot(Layout *l) {
 }
 
 template<typename Layout>
-struct TextView : DynaView<Layout> {
-	void IncrHappened() {
-		emitChanges(cout,this->Q,gd<Name>(&this->layout).c_str());
-		this->Q.Okay(true);
-		ModifyFlags(this->Q) = 0;
-		doOutdot(&this->current);
+struct TextViewWatcher : IncrViewWatcher<Layout> {
+	void IncrHappened(ChangeQueue<Layout> &Q) {
+		emitChanges(cout,Q,gd<Name>(Q.client).c_str());
+		Q.Okay(true);
+		ModifyFlags(Q) = 0;
+		doOutdot(Q.current);
 	}
-	void IncrOpen() {
-		std::cout << "open graph " << gd<Name>(&this->layout) << " " << gd<StrAttrs>(&this->layout) << std::endl;
+	void IncrOpen(ChangeQueue<Layout> &Q) {
+		std::cout << "open graph " << gd<Name>(Q.client) << " " << gd<StrAttrs>(Q.client) << std::endl;
 		igd<StrAttrChanges>(Q.ModGraph()).clear();
 	}
-	void IncrClose() {
-	    std::cout << "close graph " << gd<Name>(&this->layout) << std::endl;
+	void IncrClose(ChangeQueue<Layout> &Q) {
+		std::cout << "close graph " << gd<Name>(Q.client) << std::endl;
 	}
-	void IncrNewNode(typename Layout::Node *n) {}
-	void IncrNewEdge(typename Layout::Edge *e) {}
-	TextView(Name name) : DynaView<Layout>(name,g_transform,g_useDotDefaults) {}
+	void IncrNewNode(ChangeQueue<Layout> &Q,typename Layout::Node *n) {}
+	void IncrNewEdge(ChangeQueue<Layout> &Q,typename Layout::Edge *e) {}
 };
 struct IncrCalledBack : IncrCallbacks {
     IncrCalledBack() {
@@ -101,13 +100,17 @@ struct IncrCalledBack : IncrCallbacks {
 		}
 		IncrLangEvents *ret;
 		if(type=="dynadag") {
-			TextView<DynaDAGLayout> *view = new TextView<DynaDAGLayout>(name);
+			DynaView<DynaDAGLayout> *view = new DynaView<DynaDAGLayout>(name,g_transform,g_useDotDefaults);
+			TextViewWatcher<DynaDAGLayout> *watcher = new TextViewWatcher<DynaDAGLayout>;
+			view->watcher = watcher;
 			ret = view;
 			if(setEngs)
 				SetAndMark(view->Q.ModGraph(),"engines",setEngs);
 		}
 		else if(type=="fdp") {
-			TextView<FDPLayout> *view = new TextView<FDPLayout>(name);
+			DynaView<FDPLayout> *view = new DynaView<FDPLayout>(name,g_transform,g_useDotDefaults);
+			TextViewWatcher<FDPLayout> *watcher = new TextViewWatcher<FDPLayout>;
+			view->watcher = watcher;
 			ret = view;
 			if(setEngs)
 				SetAndMark(view->Q.ModGraph(),"engines",setEngs);

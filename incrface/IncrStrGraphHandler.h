@@ -111,7 +111,6 @@ void IncrStrGraphHandler<NGraph>::incr_ev_mod_node(DString name,const StrAttrs &
 	typename ChangeQueue<NGraph>::ResultNode result = Q_.ModNode(n);
 	SetAndMark(result.object,attrs);
     maybe_go();
-    return true;
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_mod_edge(DString name,const StrAttrs &attrs) {
@@ -121,7 +120,6 @@ void IncrStrGraphHandler<NGraph>::incr_ev_mod_edge(DString name,const StrAttrs &
 	typename ChangeQueue<NGraph>::ResultEdge result = Q_.ModEdge(e);
 	SetAndMark(result.object,attrs);
     maybe_go();
-    return true;
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_del_node(DString name) {
@@ -130,7 +128,6 @@ void IncrStrGraphHandler<NGraph>::incr_ev_del_node(DString name) {
         throw IncrNodeDoesNotExist(name);
 	Q.DelNode(n);
     maybe_go();
-    return true;
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_del_edge(DString name) {
@@ -139,7 +136,6 @@ void IncrStrGraphHandler<NGraph>::incr_ev_del_edge(DString name) {
         throw IncrEdgeDoesNotExist(name);
 	Q.DelEdge(e);
     maybe_go();
-    return true;
 }
 // NO
 template<typename NGraph>

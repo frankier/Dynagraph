@@ -27,6 +27,7 @@
 #include "common/randomName.h"
 #include "common/Transform.h"
 #include "DinoMachine.h"
+#include "IncrViewWatcher.h"
 #include "incrxep.h"
 
 namespace Dynagraph {
@@ -51,13 +52,7 @@ struct DynaView : IncrLangEvents {
     Transform *m_transform;
     bool m_useDotDefaults;
 	bool m_replacementFlag; // whether we're in the middle of engine replacement
-
-	// implement these to respond to incrface events
-	virtual void IncrHappened() = 0;
-	virtual void IncrOpen() = 0;
-	virtual void IncrClose() = 0;
-	virtual void IncrNewNode(typename Layout::Node *n) = 0;
-	virtual void IncrNewEdge(typename Layout::Edge *e) = 0;
+	IncrViewWatcher<Layout> *watcher;
 
 	DynaView(Name name = Name(),Transform *transform=0, bool useDotDefaults=false);
 	virtual ~DynaView();
@@ -245,7 +240,7 @@ bool DynaView<Layout>::maybe_go() {
             forget(*ei);
         for(typename Layout::node_iter ni = Q.unbornN.nodes().begin(); ni!=Q.unbornN.nodes().end(); ++ni)
             forget(*ni);
-        IncrHappened(); // must clear Q but the events might cause more changes
+        watcher->IncrHappened(Q); // must clear Q but the events might cause more changes
 		ch = true;
     }
 	if(ch)
@@ -274,11 +269,11 @@ void DynaView<Layout>::incr_ev_open_graph(DString graph,const StrAttrs &attrs) {
         throw IncrReopenXep(graph);
     open_layout(attrs);
     incr_set_handler(gd<Name>(&layout) = graph,this);
-	IncrOpen();
+	watcher->IncrOpen(Q);
 }
 template<typename Layout>
 void DynaView<Layout>::incr_ev_close_graph() {
-	IncrClose();
+	watcher->IncrClose(Q);
 }
 template<typename Layout>
 void DynaView<Layout>::incr_ev_mod_graph(const StrAttrs &attrs) {
@@ -314,7 +309,7 @@ DString DynaView<Layout>::incr_ev_ins_node(DString name, const StrAttrs &attrs, 
 		:Q.ModNode(nb.first);
     Update upd = stringsIn<Layout>(m_transform,result.object,attrs,true);
     if(isInsert)
-        IncrNewNode(result.object);
+        watcher->IncrNewNode(Q,result.object);
 	else 
         ModifyNode(Q,result.object,upd);
     maybe_go();
@@ -333,7 +328,7 @@ DString DynaView<Layout>::incr_ev_ins_edge(DString name, DString tailname, DStri
 		:Q.ModEdge(eb.first);
     Update upd = stringsIn<Layout>(m_transform,result.object,attrs,true);
     if(isInsert)
-        IncrNewEdge(result.object);
+        watcher->IncrNewEdge(Q,result.object);
     else
         ModifyEdge(Q,result.object,upd);
     maybe_go();
