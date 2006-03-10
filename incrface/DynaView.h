@@ -119,7 +119,8 @@ DynaView<Layout>::DynaView(Name name,Transform *transform, bool useDotDefaults) 
 	locks(0),
     m_transform(transform),
     m_useDotDefaults(useDotDefaults),
-    m_replacementFlag(false)
+    m_replacementFlag(false),
+	watcher(0)
 {
 	if(name.empty())
 		name = randomName('v');
@@ -240,7 +241,10 @@ bool DynaView<Layout>::maybe_go() {
             forget(*ei);
         for(typename Layout::node_iter ni = Q.unbornN.nodes().begin(); ni!=Q.unbornN.nodes().end(); ++ni)
             forget(*ni);
-        watcher->IncrHappened(Q); // must clear Q but the events might cause more changes
+		if(watcher)
+			watcher->IncrHappened(Q); // must clear Q but the events might cause more changes
+		else
+			Q.Okay(true);
 		ch = true;
     }
 	if(ch)
@@ -269,11 +273,13 @@ void DynaView<Layout>::incr_ev_open_graph(DString graph,const StrAttrs &attrs) {
         throw IncrReopenXep(graph);
     open_layout(attrs);
     incr_set_handler(gd<Name>(&layout) = graph,this);
-	watcher->IncrOpen(Q);
+	if(watcher)
+		watcher->IncrOpen(Q);
 }
 template<typename Layout>
 void DynaView<Layout>::incr_ev_close_graph() {
-	watcher->IncrClose(Q);
+	if(watcher)
+		watcher->IncrClose(Q);
 }
 template<typename Layout>
 void DynaView<Layout>::incr_ev_mod_graph(const StrAttrs &attrs) {
@@ -308,8 +314,10 @@ DString DynaView<Layout>::incr_ev_ins_node(DString name, const StrAttrs &attrs, 
 		?Q.InsNode(nb.first)
 		:Q.ModNode(nb.first);
     Update upd = stringsIn<Layout>(m_transform,result.object,attrs,true);
-    if(isInsert)
-        watcher->IncrNewNode(Q,result.object);
+	if(isInsert) {
+		if(watcher)
+	        watcher->IncrNewNode(Q,result.object);
+	}
 	else 
         ModifyNode(Q,result.object,upd);
     maybe_go();
@@ -327,8 +335,10 @@ DString DynaView<Layout>::incr_ev_ins_edge(DString name, DString tailname, DStri
 		?Q.InsEdge(eb.first)
 		:Q.ModEdge(eb.first);
     Update upd = stringsIn<Layout>(m_transform,result.object,attrs,true);
-    if(isInsert)
-        watcher->IncrNewEdge(Q,result.object);
+	if(isInsert) {
+		if(watcher)
+	        watcher->IncrNewEdge(Q,result.object);
+	}
     else
         ModifyEdge(Q,result.object,upd);
     maybe_go();
