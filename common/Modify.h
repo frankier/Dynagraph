@@ -14,6 +14,8 @@
 *                   http://dynagraph.org                  *
 **********************************************************/
 
+#include "LayoutAttrs.h"
+
 namespace Dynagraph {
 
 template<typename Layout>

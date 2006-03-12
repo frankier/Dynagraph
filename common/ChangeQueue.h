@@ -17,7 +17,7 @@
 #ifndef ChangeQueue_h
 #define ChangeQueue_h
 
-#include "LayoutAttrs.h"
+#include "dgxep.h"
 
 namespace Dynagraph {
 
@@ -53,133 +53,15 @@ struct ChangeQueue {
 	};
 	typedef Result<typename Graph::Node> NodeResult;
 	typedef Result<typename Graph::Edge> EdgeResult;
-	NodeResult InsNode(typename Graph::Node *n) {
-		Result<typename Graph::Node> result;
-		if(delN.erase(n)) { // del+ins = mod!
-			assert(current->find(n));
-			result.action = modified;
-			result.object = modN.insert(n).first;
-		}
-		else if(unbornN.erase(n)) { // ins+del+ins = ins
-			result.action = inserted;
-			result.object = insN.insert(n).first;
-		}
-		else if(modN.find(n)||insN.find(n)||current->find(n))
-			throw InsertInserted();
-		else {
-			result.action = inserted;
-			result.object = insN.insert(n).first;
-		}
-		return result;
-	}
-	EdgeResult InsEdge(typename Graph::Edge *e) {
-		Result<typename Graph::Edge> result;
-		if(delE.inducing_erase_edge(e)) { // del+ins = mod!
-			assert(current->find(e));
-			result.action = modified;
-			result.object = modE.insert(e).first;
-		}
-		else if(unbornE.inducing_erase_edge(e)) { // ins+del+ins = ins
-			result.action = inserted;
-			result.object = insE.insert(e).first;
-		}
-		else if(modE.find(e)||insE.find(e)||current->find(e))
-			throw InsertInserted();
-		else {
-			result.action = inserted;
-			result.object = insE.insert(e).first;
-		}
-		return result;
-	}
-	NodeResult ModNode(typename Graph::Node *n) {
-		Result<typename Graph::Node> result;
-		if(typename Graph::Node *n2 = insN.find(n)) {
-			result.action = inserted;
-			result.object = n2;
-		}
-		else if(delN.find(n))
-			throw ModifyDeleted();
-		else if(!current->find(n))
-			throw ModifyUninserted();
-		else {
-			result.action = modified;
-			result.object = modN.insert(n).first;
-		}
-		return result;
-	}
-	EdgeResult ModEdge(typename Graph::Edge *e) {
-		Result<typename Graph::Edge> result;
-		if(typename Graph::Edge *e2 = insE.find(e)) {
-			result.action = inserted;
-			result.object = e2;
-		}
-		else if(delE.find(e))
-			throw ModifyDeleted();
-		else if(!current->find(e))
-			throw ModifyUninserted();
-		else {
-			result.action = modified;
-			result.object = modE.insert(e).first;
-		}
-		return result;
-	}
+	NodeResult InsNode(typename Graph::Node *n);
+	EdgeResult InsEdge(typename Graph::Edge *e);
+	NodeResult ModNode(typename Graph::Node *n);
+	EdgeResult ModEdge(typename Graph::Edge *e);
 	Graph *ModGraph() {
 		return &modN;
 	}
-	NodeResult DelNode(typename Graph::Node *n) {
-		Result<typename Graph::Node> result;
-		if(delN.find(n))
-			throw DeleteDeleted();
-		if(insN.find(n)) { //ins+del = do nothing
-			// delete edges that haven't yet been inserted
-			if(typename Graph::Node *in = insE.find(n))
-				for(typename Graph::nodeedge_iter i = in->alledges().begin(); i!=in->alledges().end();) {
-					typename Graph::Edge *ie = *i++;
-					DelEdge(ie);
-				}
-			result.action = nothing;
-			result.object = 0;
-			unbornN.insert(n);
-			insN.erase(n);
-		}
-		else {
-			modN.erase(n);
-			// remove edges that are currently inserted
-			typename Graph::Node *cn = current->find(n); 
-			for(typename Graph::nodeedge_iter i = cn->alledges().begin(); i!=cn->alledges().end();) {
-				typename Graph::Edge *ce = *i++;
-				if(!delE.find(ce))
-					DelEdge(ce);
-			}
-			// and edges that haven't yet been inserted
-			if(typename Graph::Node *in = insE.find(n))
-				for(typename Graph::nodeedge_iter i = in->alledges().begin(); i!=in->alledges().end();) {
-					typename Graph::Edge *ie = *i++;
-					DelEdge(ie);
-				}
-			result.action = deleted;
-			result.object = delN.insert(n).first;
-		}
-		return result;
-	}
-
-	EdgeResult DelEdge(typename Graph::Edge *e) {
-		Result<typename Graph::Edge> result;
-		if(delE.find(e))
-			throw DeleteDeleted();
-		if(typename Graph::Edge *ie = insE.find(e)) { //ins+del = do nothing
-			result.action = nothing;
-			result.object = 0;
-			unbornE.insert(e);
-			insE.inducing_erase_edge(e);
-		}
-		else {
-			modE.inducing_erase_edge(e);
-			result.action = deleted;
-			result.object = delE.insert(e).first;
-		}
-		return result;
-	}
+	NodeResult DelNode(typename Graph::Node *n);
+	EdgeResult DelEdge(typename Graph::Edge *e);
 	// called by server to update current subgraph based on current changes
 	void UpdateCurrent();
 
@@ -214,6 +96,135 @@ struct ChangeQueue {
 		EndnodesNotInserted(bool fatal = false) : DGException("insertion of edge without nodes",fatal) {}
 	};
 };
+template<typename Graph>
+typename ChangeQueue<Graph>::NodeResult ChangeQueue<Graph>::InsNode(typename Graph::Node *n) {
+	Result<typename Graph::Node> result;
+	if(delN.erase(n)) { // del+ins = mod!
+		assert(current->find(n));
+		result.action = modified;
+		result.object = modN.insert(n).first;
+	}
+	else if(unbornN.erase(n)) { // ins+del+ins = ins
+		result.action = inserted;
+		result.object = insN.insert(n).first;
+	}
+	else if(modN.find(n)||insN.find(n)||current->find(n))
+		throw InsertInserted();
+	else {
+		result.action = inserted;
+		result.object = insN.insert(n).first;
+	}
+	return result;
+}
+template<typename Graph>
+typename ChangeQueue<Graph>::EdgeResult ChangeQueue<Graph>::InsEdge(typename Graph::Edge *e) {
+	Result<typename Graph::Edge> result;
+	if(delE.inducing_erase_edge(e)) { // del+ins = mod!
+		assert(current->find(e));
+		result.action = modified;
+		result.object = modE.insert(e).first;
+	}
+	else if(unbornE.inducing_erase_edge(e)) { // ins+del+ins = ins
+		result.action = inserted;
+		result.object = insE.insert(e).first;
+	}
+	else if(modE.find(e)||insE.find(e)||current->find(e))
+		throw InsertInserted();
+	else {
+		result.action = inserted;
+		result.object = insE.insert(e).first;
+	}
+	return result;
+}
+template<typename Graph>
+typename ChangeQueue<Graph>::NodeResult ChangeQueue<Graph>::ModNode(typename Graph::Node *n) {
+	Result<typename Graph::Node> result;
+	if(typename Graph::Node *n2 = insN.find(n)) {
+		result.action = inserted;
+		result.object = n2;
+	}
+	else if(delN.find(n))
+		throw ModifyDeleted();
+	else if(!current->find(n))
+		throw ModifyUninserted();
+	else {
+		result.action = modified;
+		result.object = modN.insert(n).first;
+	}
+	return result;
+}
+template<typename Graph>
+typename ChangeQueue<Graph>::EdgeResult ChangeQueue<Graph>::ModEdge(typename Graph::Edge *e) {
+	Result<typename Graph::Edge> result;
+	if(typename Graph::Edge *e2 = insE.find(e)) {
+		result.action = inserted;
+		result.object = e2;
+	}
+	else if(delE.find(e))
+		throw ModifyDeleted();
+	else if(!current->find(e))
+		throw ModifyUninserted();
+	else {
+		result.action = modified;
+		result.object = modE.insert(e).first;
+	}
+	return result;
+}
+template<typename Graph>
+typename ChangeQueue<Graph>::NodeResult ChangeQueue<Graph>::DelNode(typename Graph::Node *n) {
+	Result<typename Graph::Node> result;
+	if(delN.find(n))
+		throw DeleteDeleted();
+	if(insN.find(n)) { //ins+del = do nothing
+		// delete edges that haven't yet been inserted
+		if(typename Graph::Node *in = insE.find(n))
+			for(typename Graph::nodeedge_iter i = in->alledges().begin(); i!=in->alledges().end();) {
+				typename Graph::Edge *ie = *i++;
+				DelEdge(ie);
+			}
+		result.action = nothing;
+		result.object = 0;
+		unbornN.insert(n);
+		insN.erase(n);
+	}
+	else {
+		modN.erase(n);
+		// remove edges that are currently inserted
+		typename Graph::Node *cn = current->find(n); 
+		for(typename Graph::nodeedge_iter i = cn->alledges().begin(); i!=cn->alledges().end();) {
+			typename Graph::Edge *ce = *i++;
+			if(!delE.find(ce))
+				DelEdge(ce);
+		}
+		// and edges that haven't yet been inserted
+		if(typename Graph::Node *in = insE.find(n))
+			for(typename Graph::nodeedge_iter i = in->alledges().begin(); i!=in->alledges().end();) {
+				typename Graph::Edge *ie = *i++;
+				DelEdge(ie);
+			}
+		result.action = deleted;
+		result.object = delN.insert(n).first;
+	}
+	return result;
+}
+template<typename Graph>
+typename ChangeQueue<Graph>::EdgeResult ChangeQueue<Graph>::DelEdge(typename Graph::Edge *e) {
+	Result<typename Graph::Edge> result;
+	if(delE.find(e))
+		throw DeleteDeleted();
+	if(typename Graph::Edge *ie = insE.find(e)) { //ins+del = do nothing
+		result.action = nothing;
+		result.object = 0;
+		unbornE.insert(e);
+		insE.inducing_erase_edge(e);
+	}
+	else {
+		modE.inducing_erase_edge(e);
+		result.action = deleted;
+		result.object = delE.insert(e).first;
+	}
+	return result;
+}
 template<typename Graph>
 void ChangeQueue<Graph>::UpdateCurrent() {
 	// hopefully the other methods will catch any errors before this
