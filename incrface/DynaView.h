@@ -147,39 +147,10 @@ std::pair<typename Layout::Edge*,bool> DynaView<Layout>::getEdge(DString name,ty
 	if(name.empty())
 		name = randomName('e');
 	return layout.fetch_edge(t,h,name,create);
-	/*
-	typename Layout::Edge *e=0;
-	else if((e = edges[name])) {
-		if(t && t!=e->tail || h && h!=e->head)
-			throw DGEdgeNameUsed(name);
-		return std::make_pair(e,false);
-	}
-	if(!(t && h))
-		return std::make_pair<typename Layout::Edge*>(0,false);
-	e = layout.find_edge(t,h);
-	if(e)
-		return std::make_pair(e,false);
-	if(!create)
-		return std::make_pair<typename Layout::Edge*>(0,false);
-	e = layout.create_edge(t,h).first;
-	gd<Name>(e) = name;
-	edges[name] = e;
-	return std::make_pair(e,true);
-	*/
 }
 template<typename Layout>
 std::pair<typename Layout::Edge*,bool> DynaView<Layout>::getEdge(DString name,DString tail,DString head,bool create) {
 	return layout.fetch_edge(tail,head,name,create);
-/*
-	assert(tail.size()&&head.size());
-	typename Layout::Node *t = getNode(tail,false).first,
-		*h = getNode(head,false).first;
-	if(!t)
-		throw DGEdgeTailDoesNotExist(tail);
-	if(!h)
-		throw DGEdgeHeadDoesNotExist(head);
-	return getEdge(name,t,h,create);
-*/
 }
 template<typename Layout>
 typename Layout::Edge *DynaView<Layout>::getEdge(DString name,DString tail,DString head) {
@@ -188,7 +159,6 @@ typename Layout::Edge *DynaView<Layout>::getEdge(DString name,DString tail,DStri
 template<typename Layout>
 typename Layout::Edge *DynaView<Layout>::getEdge(DString name) {
 	return layout.fetch_edge(name);
-	//return getEdge(name,(typename Layout::Node*)0,(typename Layout::Node*)0,false).first;
 }
 template<typename Layout>
 void DynaView<Layout>::rename(DString newName) {
@@ -200,44 +170,26 @@ void DynaView<Layout>::rename(DString newName) {
 template<typename Layout>
 void DynaView<Layout>::rename(typename Layout::Node *n,DString newName) {
 	layout.rename(n,newName);
-	/*
-	forget(n);
-	nodes[gd<Name>(n) = newName] = n;
-	*/
 }
 template<typename Layout>
 void DynaView<Layout>::rename(typename Layout::Edge *e,DString newName) {
 	layout.rename(e,newName);
-	/*
-	forget(e);
-	edges[gd<Name>(e) = newName] = e;
-	*/
 }
 template<typename Layout>
 void DynaView<Layout>::forget(typename Layout::Node *n) {
 	layout.forget(n);
-	//nodes.erase(gd<Name>(n));
 }
 template<typename Layout>
 void DynaView<Layout>::forget(typename Layout::Edge *e) {
 	layout.forget(e);
-	//edges.erase(gd<Name>(e));
 }
 template<typename Layout>
 void DynaView<Layout>::destroy(typename Layout::Node *n) {
 	layout.erase(n);
-	/*
-	forget(n);
-	layout.erase(n);
-	*/
 }
 template<typename Layout>
 void DynaView<Layout>::destroy(typename Layout::Edge *e) {
 	layout.erase(e);
-	/*
-	forget(e);
-	layout.erase(e);
-	*/
 }
 
 // incr_ev
