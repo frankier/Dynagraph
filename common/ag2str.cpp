@@ -96,7 +96,7 @@ StrGraph *ag2str(Agraph_t *g) {
 			try {
 				gg->create_edge(tail,head,nattr).first;
 			}
-			catch(ParallelEdgesUnsupported) {
+			catch(DGParallelEdgesNotSupported) {
 			}
 		}
 	}

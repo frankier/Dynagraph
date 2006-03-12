@@ -131,52 +131,9 @@ struct NamedAttrs : StrAttrs,Name,Hit {
 	NamedAttrs(DString name = DString()) : Name(name) {}
 	NamedAttrs(const StrAttrs &at,DString name=DString()) : StrAttrs(at),Name(name) {}
 };
-struct DuplicateNodeName : DGException {
-  DString name;
-  DuplicateNodeName(DString name) :
-    DGException("names of StrGraph nodes must be unique"),
-    name(name)
-  {}
-};
-struct DuplicateEdgeName : DGException {
-  DString name;
-  DuplicateEdgeName(DString name) :
-    DGException("names of StrGraph edges must be unique"),
-    name(name)
-  {}
-};
-struct ParallelEdgesUnsupported : DGException {
-	DString name;
-	ParallelEdgesUnsupported(DString name) :
-		DGException("LGraph does not allow multiple edges between the same tail and head"),
-		name(name)
-	{}
-};
-struct EndNodesDontMatch : DGException {
-  DString name;
-  EndNodesDontMatch(DString name) :
-    DGException("get_edge on this edge with new end nodes"),
-    name(name)
-  {}
-};
-struct NodeNotFound : DGException {
-  DString name;
-  NodeNotFound(DString name) :
-    DGException("StrGraph::readSubgraph encountered a node not in the parent"),
-    name(name)
-  {}
-};
-struct EdgeNotFound : DGException {
-  DString tail,head;
-  EdgeNotFound(DString tail,DString head) :
-    DGException("StrGraph::readSubgraph encountered an edge not in the parent"),
-    tail(tail),head(head)
-  {}
-};
-
-template<class GData,class NData,class EData,class GIData=Nothing,class NIData=Nothing,class EIData=Nothing>
-struct NamedGraph : LGraph<ADTisCDT,GData,NData,EData,GIData,NIData,EIData> {
-    typedef LGraph<ADTisCDT,GData,NData,EData,GIData,NIData,EIData> Graph;
+template<class ADTPolicy,class GData,class NData,class EData,class GIData=Nothing,class NIData=Nothing,class EIData=Nothing>
+struct NamedGraph : LGraph<ADTPolicy,GData,NData,EData,GIData,NIData,EIData> {
+    typedef LGraph<ADTPolicy,GData,NData,EData,GIData,NIData,EIData> Graph;
 	// as we all should know by now, deriving a class and adding a dictionary isn't all
 	// that good an idea.  this class is no exception; to make this work, gotta call
 	// oopsRefreshDictionary() before you need the ndict to work.  what's next?  LGraph events?
@@ -188,6 +145,9 @@ struct NamedGraph : LGraph<ADTisCDT,GData,NData,EData,GIData,NIData,EIData> {
 	NamedGraph(const NamedGraph &o) : Graph(o) {
 		oopsRefreshDictionary();
 	}
+	NamedGraph(const Graph &g) : Graph(g) {
+		oopsRefreshDictionary();
+	}
     typename Graph::Node *create_node(DString name) {
 		return create_node(NData(name));
 	}
@@ -196,12 +156,12 @@ struct NamedGraph : LGraph<ADTisCDT,GData,NData,EData,GIData,NIData,EIData> {
 		enter(nd,ret);
 		return ret;
 	}
-	typename Graph::Node *fetch_node(DString name,bool create) {
+	std::pair<typename Graph::Node *,bool> fetch_node(DString name,bool create) {
 		if(typename Graph::Node *n = ndict[name])
-			return n;
+			return make_pair(n,false);
 		if(!create)
-			return 0;
-		return create_node(name);
+			return make_pair((typename Graph::Node*)0,false);
+		return make_pair(create_node(name),true);
 	}
 	std::pair<typename Graph::Edge *,bool> create_edge(typename Graph::Node *tail,typename Graph::Node *head,DString name) {
         EData ed(name);
@@ -210,41 +170,65 @@ struct NamedGraph : LGraph<ADTisCDT,GData,NData,EData,GIData,NIData,EIData> {
 	std::pair<typename Graph::Edge *,bool> create_edge(typename Graph::Node *tail,typename Graph::Node *head,EData &ed) {
 		std::pair<typename Graph::Edge *,bool> ret = Graph::create_edge(tail,head,ed);
 		if(!ret.second)
-			throw ParallelEdgesUnsupported(ed);
+			throw DGParallelEdgesNotSupported(ed);
 		else
 			enter(ed,ret.first);
 		return ret;
 	}
-	typename Graph::Edge *fetch_edge(DString tail, DString head, DString name,bool create) {
+	std::pair<typename Graph::Edge *,bool> fetch_edge(DString tail, DString head, DString name,bool create) {
 		if(typename Graph::Edge *e = edict[name]) {
 			if(gd<Name>(e->tail)!=tail || gd<Name>(e->head)!=head)
-				throw EndNodesDontMatch(name);
-			return e;
+				throw DGEdgeNameUsed(name);
+			return make_pair(e,false);
 		}
 		if(!create)
-			return 0;
-		typename Graph::Node *t = fetch_node(tail,true),
-			*h = fetch_node(head,true);
-        return create_edge(t,h,name).first;
+			return make_pair((typename Graph::Edge*)0,false);
+		typename Graph::Node *t = fetch_node(tail,false).first,
+			*h = fetch_node(head,false).first;
+		if(!t)
+			throw DGEdgeTailDoesNotExist(tail);
+		if(!h)
+			throw DGEdgeHeadDoesNotExist(head);
+        return create_edge(t,h,name);
+	}
+	std::pair<typename Graph::Edge *,bool> fetch_edge(typename Graph::Node *tail,typename Graph::Node *head,DString name,bool create) {
+		if(typename Graph::Edge *e = edict[name]) {
+			if(e->tail!=tail || e->head!=head)
+				throw DGEdgeNameUsed(name);
+			return make_pair(e,false);
+		}
+		if(!create)
+			return make_pair((typename Graph::Edge*)0,false);
+        return create_edge(tail,head,name);
 	}
 	typename Graph::Edge *fetch_edge(DString name) {
 		return edict[name];
 	}
+	void forget(typename Graph::Node *n) {
+		ndict.erase(gd<Name>(n));
+	}
+	void forget(typename Graph::Edge *e) {
+		edict.erase(gd<Name>(e));
+	}
     void rename(typename Graph::Node *n,DString name) {
-        ndict[gd<Name>(n)] = 0;
+		forget(n);
+        //ndict[gd<Name>(n)] = 0;
         ndict[gd<Name>(n) = name] = n;
     }
     void rename(typename Graph::Edge *e,DString name) {
-        edict[gd<Name>(e)] = 0;
+		forget(e);
+        //edict[gd<Name>(e)] = 0;
         edict[gd<Name>(e) = name] = e;
     }
-    void erase(typename Graph::Node *n) {
-        ndict[gd<Name>(n)] = 0;
-        Graph::erase(n);
+    bool erase(typename Graph::Node *n) {
+		forget(n);
+        //ndict[gd<Name>(n)] = 0;
+        return Graph::erase(n);
     }
-    void erase(typename Graph::Edge *e) {
-        edict[gd<Name>(e)] = 0;
-        Graph::erase(e);
+    bool erase(typename Graph::Edge *e) {
+		forget(e);
+        //edict[gd<Name>(e)] = 0;
+        return Graph::erase(e);
     }
 	void oopsRefreshDictionary() {
 		ndict.clear();
@@ -256,7 +240,7 @@ struct NamedGraph : LGraph<ADTisCDT,GData,NData,EData,GIData,NIData,EIData> {
 		for(typename Graph::node_iter ni = what->nodes().begin(); ni!=what->nodes().end(); ++ni) {
 			typename Graph::Node *n = *ni,*found = pardict[gd<Name>(n)];
 			if(!found)
-				throw NodeNotFound(gd<Name>(n));
+				throw DGNodeDoesNotExist(gd<Name>(n));
 			insert(found);
 		}
 		for(typename Graph::graphedge_iter ei = what->edges().begin(); ei!=what->edges().end(); ++ei) {
@@ -265,7 +249,7 @@ struct NamedGraph : LGraph<ADTisCDT,GData,NData,EData,GIData,NIData,EIData> {
 				*head = pardict[gd<Name>(e->head)];
 			typename Graph::Edge *found = Graph::parent->find_edge(tail,head);
 			if(!found)
-				throw EdgeNotFound(gd<Name>(e->tail),gd<Name>(e->head));
+				throw DGEdgeDoesNotExist(gd<Name>(e->tail),gd<Name>(e->head));
 			insert(found);
 		}
 	}
@@ -275,7 +259,7 @@ protected:
 			return;
 		typename Graph::Node *&spot = ndict[name];
 		if(spot)
-			throw DuplicateNodeName(name);
+			throw DGNodeNameUsed(name);
 		spot = n;
 	}
 	void enter(const DString &name,typename Graph::Edge *e) {
@@ -283,12 +267,12 @@ protected:
 			return;
 		typename Graph::Edge *&spot = edict[name];
 		if(spot)
-			throw DuplicateEdgeName(name);
+			throw DGEdgeNameUsed(name);
 		spot = e;
 	}
 };
 
-typedef NamedGraph<NamedAttrs,NamedAttrs,NamedAttrs> StrGraph;
+typedef NamedGraph<ADTisCDT,NamedAttrs,NamedAttrs,NamedAttrs> StrGraph;
 
 } // namespace Dynagraph
 

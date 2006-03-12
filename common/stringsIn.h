@@ -280,16 +280,15 @@ void applyStrGraph(Transform *trans,bool useDotDefaults,StrGraph *g,Layout *out,
   gd<Name>(out) = gd<Name>(g);
   std::map<DString,typename Layout::Node*> renode;
   for(StrGraph::node_iter ni = g->nodes().begin(); ni!=g->nodes().end(); ++ni) {
-    typename Layout::Node *n = out->create_node();
+    typename Layout::Node *n = out->create_node(gd<Name>(*ni));
     subg->insert(n);
-    renode[gd<Name>(n) = gd<Name>(*ni)] = n;
+    renode[gd<Name>(*ni)] = n;
     StrAttrs &attrs = gd<StrAttrs>(*ni);
 	stringsIn<Layout>(trans,n,attrs,false);
   }
   for(StrGraph::graphedge_iter ei = g->edges().begin(); ei!=g->edges().end(); ++ei) {
     typename Layout::Edge *e = out->create_edge(renode[gd<Name>((*ei)->tail)],
-				     renode[gd<Name>((*ei)->head)]).first;
-    gd<Name>(e) = gd<Name>(*ei);
+				     renode[gd<Name>((*ei)->head)],gd<Name>(*ei)).first;
     subg->insert(e);
     StrAttrs &attrs = gd<StrAttrs>(*ei);
 	stringsIn<Layout>(trans,e,attrs,false);

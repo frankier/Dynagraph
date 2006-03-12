@@ -235,9 +235,16 @@ typedef std::vector<EdgeLabel> EdgeLabels;
 // These are the recommended basic attributes for a Dynagraph Layout graph
 // Most are required by the common Dynagraph template libraries
 // Further refactoring could reduce these dependencies
-struct GraphAttrs : Name,StrAttrs,Hit,ModelPointer,Drawn,GraphGeom,Translation,StaticLabels {};
-struct NodeAttrs : Name,StrAttrs,Hit,ModelPointer,Drawn,NodeGeom,NodeLabels,IfPolyDef {};
-struct EdgeAttrs : Name,StrAttrs,Hit,ModelPointer,Drawn,EdgeGeom,EdgeLabels {};
+struct GraphAttrs : Name,StrAttrs,Hit,ModelPointer,Drawn,GraphGeom,Translation,StaticLabels {
+	GraphAttrs(Name name) : Name(name) {}
+	GraphAttrs() {}
+};
+struct NodeAttrs : Name,StrAttrs,Hit,ModelPointer,Drawn,NodeGeom,NodeLabels,IfPolyDef {
+	NodeAttrs(Name name) : Name(name) {}
+};
+struct EdgeAttrs : Name,StrAttrs,Hit,ModelPointer,Drawn,EdgeGeom,EdgeLabels {
+	EdgeAttrs(Name name) : Name(name) {}
+};
 
 struct LayoutUpdates : StrAttrChanges,Update {};
 

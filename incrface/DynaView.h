@@ -39,10 +39,6 @@ namespace Dynagraph {
 
 template<typename Layout>
 struct DynaView : IncrLangEvents {
-	typedef std::map<DString,typename Layout::Node*> nodeDict;
-	typedef std::map<DString,typename Layout::Edge*> edgeDict;
-	nodeDict nodes;
-	edgeDict edges;
 	Layout layout, // everything the client has created
         current, // what's currently being controlled by engine
         old; // when switching engines, the stuff that was already here
@@ -64,6 +60,8 @@ struct DynaView : IncrLangEvents {
 	std::pair<typename Layout::Node*,bool> getNode(DString name,bool create=false) { // vc++ gave me erroneous errors when i outalined
 		if(name.empty())
 			name = randomName('n');
+		return layout.fetch_node(name,create);
+		/*
 		typename Layout::Node *n = nodes[name];
 		if(n)
 			return std::make_pair(n,false);
@@ -73,6 +71,7 @@ struct DynaView : IncrLangEvents {
 		gd<Name>(n) = name;
 		nodes[name] = n;
 		return std::make_pair(n,true);
+		*/
 	}
 	std::pair<typename Layout::Edge*,bool> getEdge(DString id,typename Layout::Node *t,typename Layout::Node *h,bool create);
 	std::pair<typename Layout::Edge*,bool> getEdge(DString id,DString tail,DString head,bool create);
@@ -145,12 +144,14 @@ void DynaView<Layout>::completeReplacement() {
 }
 template<typename Layout>
 std::pair<typename Layout::Edge*,bool> DynaView<Layout>::getEdge(DString name,typename Layout::Node *t,typename Layout::Node *h,bool create) {
-	typename Layout::Edge *e=0;
 	if(name.empty())
 		name = randomName('e');
+	return layout.fetch_edge(t,h,name,create);
+	/*
+	typename Layout::Edge *e=0;
 	else if((e = edges[name])) {
 		if(t && t!=e->tail || h && h!=e->head)
-			throw IncrEdgeReopen(name);
+			throw DGEdgeNameUsed(name);
 		return std::make_pair(e,false);
 	}
 	if(!(t && h))
@@ -164,17 +165,21 @@ std::pair<typename Layout::Edge*,bool> DynaView<Layout>::getEdge(DString name,ty
 	gd<Name>(e) = name;
 	edges[name] = e;
 	return std::make_pair(e,true);
+	*/
 }
 template<typename Layout>
 std::pair<typename Layout::Edge*,bool> DynaView<Layout>::getEdge(DString name,DString tail,DString head,bool create) {
+	return layout.fetch_edge(tail,head,name,create);
+/*
 	assert(tail.size()&&head.size());
 	typename Layout::Node *t = getNode(tail,false).first,
 		*h = getNode(head,false).first;
 	if(!t)
-		throw IncrEdgeTailDoesNotExist(tail);
+		throw DGEdgeTailDoesNotExist(tail);
 	if(!h)
-		throw IncrEdgeHeadDoesNotExist(head);
+		throw DGEdgeHeadDoesNotExist(head);
 	return getEdge(name,t,h,create);
+*/
 }
 template<typename Layout>
 typename Layout::Edge *DynaView<Layout>::getEdge(DString name,DString tail,DString head) {
@@ -182,7 +187,8 @@ typename Layout::Edge *DynaView<Layout>::getEdge(DString name,DString tail,DStri
 }
 template<typename Layout>
 typename Layout::Edge *DynaView<Layout>::getEdge(DString name) {
-	return getEdge(name,(typename Layout::Node*)0,(typename Layout::Node*)0,false).first;
+	return layout.fetch_edge(name);
+	//return getEdge(name,(typename Layout::Node*)0,(typename Layout::Node*)0,false).first;
 }
 template<typename Layout>
 void DynaView<Layout>::rename(DString newName) {
@@ -193,31 +199,45 @@ void DynaView<Layout>::rename(DString newName) {
 }
 template<typename Layout>
 void DynaView<Layout>::rename(typename Layout::Node *n,DString newName) {
+	layout.rename(n,newName);
+	/*
 	forget(n);
 	nodes[gd<Name>(n) = newName] = n;
+	*/
 }
 template<typename Layout>
 void DynaView<Layout>::rename(typename Layout::Edge *e,DString newName) {
+	layout.rename(e,newName);
+	/*
 	forget(e);
 	edges[gd<Name>(e) = newName] = e;
+	*/
 }
 template<typename Layout>
 void DynaView<Layout>::forget(typename Layout::Node *n) {
-	nodes.erase(gd<Name>(n));
+	layout.forget(n);
+	//nodes.erase(gd<Name>(n));
 }
 template<typename Layout>
 void DynaView<Layout>::forget(typename Layout::Edge *e) {
-	edges.erase(gd<Name>(e));
+	layout.forget(e);
+	//edges.erase(gd<Name>(e));
 }
 template<typename Layout>
 void DynaView<Layout>::destroy(typename Layout::Node *n) {
+	layout.erase(n);
+	/*
 	forget(n);
 	layout.erase(n);
+	*/
 }
 template<typename Layout>
 void DynaView<Layout>::destroy(typename Layout::Edge *e) {
+	layout.erase(e);
+	/*
 	forget(e);
 	layout.erase(e);
+	*/
 }
 
 // incr_ev
@@ -327,7 +347,7 @@ template<typename Layout>
 DString DynaView<Layout>::incr_ev_ins_edge(DString name, DString tailname, DString headname, const StrAttrs &attrs) {
     std::pair<typename Layout::Edge*,bool> eb = getEdge(name,tailname,headname,true);
 	if(!eb.second&&gd<Name>(eb.first)!=name)
-		throw IncrEdgeNameMismatch(name);
+		throw DGParallelEdgesNotSupported(name);
 	bool isInsert = eb.second 
 		|| Q.delE.find(eb.first)
 		|| Q.unbornE.find(eb.first);
@@ -348,7 +368,7 @@ template<typename Layout>
 void DynaView<Layout>::incr_ev_mod_node(DString name,const StrAttrs &attrs) {
     typename Layout::Node *n = getNode(name).first;
     if(!n)
-        throw IncrNodeDoesNotExist(name);
+        throw DGNodeDoesNotExist(name);
 	typename ChangeQueue<Layout>::NodeResult result = Q.ModNode(n);
     ModifyNode(Q,result.object,stringsIn<Layout>(m_transform,result.object,attrs,false));
     maybe_go();
@@ -357,7 +377,7 @@ template<typename Layout>
 void DynaView<Layout>::incr_ev_mod_edge(DString name,const StrAttrs &attrs) {
     typename Layout::Edge *e = getEdge(name);
     if(!e)
-        throw IncrEdgeDoesNotExist(name);
+        throw DGEdgeDoesNotExist(name);
 	typename ChangeQueue<Layout>::EdgeResult result = Q.ModEdge(e);
     ModifyEdge(Q,result.object,stringsIn<Layout>(m_transform,result.object,attrs,false));
     maybe_go();
@@ -366,7 +386,7 @@ template<typename Layout>
 void DynaView<Layout>::incr_ev_del_node(DString name) {
 	typename Layout::Node *n = getNode(name).first;
     if(!n)
-        throw IncrNodeDoesNotExist(name);
+        throw DGNodeDoesNotExist(name);
     Q.DelNode(n);
     maybe_go();
 }
@@ -374,7 +394,7 @@ template<typename Layout>
 void DynaView<Layout>::incr_ev_del_edge(DString name) {
     typename Layout::Edge *e = getEdge(name);
     if(!e)
-        throw IncrEdgeDoesNotExist(name);
+        throw DGEdgeDoesNotExist(name);
     Q.DelEdge(e);
     maybe_go();
 }
@@ -387,7 +407,7 @@ template<typename Layout>
 void DynaView<Layout>::incr_ev_req_node(DString name) {
     typename Layout::Node *n = getNode(name).first;
     if(!n)
-        throw IncrNodeDoesNotExist(name);
+        throw DGNodeDoesNotExist(name);
 	if(watcher)
 		watcher->FulfilNode(n);
 }
@@ -395,7 +415,7 @@ template<typename Layout>
 void DynaView<Layout>::incr_ev_req_edge(DString name) {
     typename Layout::Edge *e = getEdge(name);
     if(!e)
-        throw IncrEdgeDoesNotExist(name);
+        throw DGEdgeDoesNotExist(name);
 	if(watcher)
 		watcher->FulfilEdge(e);
 }

@@ -34,7 +34,7 @@ DinoMachine g_dinoMachine;
 IncrCallbacks *g_incrCallback;
 
 void incr_set_handler(DString name,IncrLangEvents *handler) {
-    DinoMachine::Node *n = g_dinoMachine.fetch_node(name,true);
+    DinoMachine::Node *n = g_dinoMachine.fetch_node(name,true).first;
     IncrLangEvents *&h = gd<DinoMachNode>(n).handler;
     if(h!=handler) {
         if(h)
@@ -55,7 +55,7 @@ extern void incr_set_allow_reopen(DString name,bool whether) {
     gd<DinoMachNode>(n).allowOneReopen = whether;
 }
 void incr_open_graph(const char *graph) {
-    DinoMachine::Node *n = g_dinoMachine.fetch_node(graph,true);
+    DinoMachine::Node *n = g_dinoMachine.fetch_node(graph,true).first;
 	DinoMachNode &dmn = gd<DinoMachNode>(n);
 	if(dmn.alreadyOpen) {
 		if(!dmn.allowOneReopen)

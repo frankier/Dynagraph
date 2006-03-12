@@ -34,27 +34,6 @@ struct IncrGraphNotOpen : IncrException {
 struct IncrReopenXep : IncrException {
     IncrReopenXep(DString name) : IncrException("Tried to reopen graph",name) {}
 };
-struct IncrNodeReopen : IncrException {
-    IncrNodeReopen(DString name) : IncrException("The node name has already been used",name) {}
-};
-struct IncrEdgeReopen : IncrException {
-    IncrEdgeReopen(DString name) : IncrException("The edge name has already been used",name) {}
-};
-struct IncrEdgeTailDoesNotExist : IncrException {
-	IncrEdgeTailDoesNotExist(DString name) : IncrException("Tried to open edge but tail does not exist",name) {}
-};
-struct IncrEdgeHeadDoesNotExist : IncrException {
-	IncrEdgeHeadDoesNotExist(DString name) : IncrException("Tried to open edge but head does not exist",name) {}
-};
-struct IncrEdgeNameMismatch : IncrException {
-    IncrEdgeNameMismatch(DString name) : IncrException("Tried to re-open edge under new name",name) {}
-};
-struct IncrEdgeDoesNotExist : IncrException {
-    IncrEdgeDoesNotExist(DString name) : IncrException("Tried to modify or delete unknown edge",name) {}
-};
-struct IncrNodeDoesNotExist : IncrException {
-    IncrNodeDoesNotExist(DString name) : IncrException("Tried to modify or delete unknown node",name) {}
-};
 
 } // namespace Dynagraph
 

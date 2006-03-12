@@ -22,7 +22,7 @@
 namespace Dynagraph {
 namespace DynaDAG {
 
-typedef LGraph<ADTisCDT,GraphAttrs,NodeAttrs,EdgeAttrs,LayoutUpdates,LayoutUpdates,LayoutUpdates> DynaDAGLayout;
+typedef NamedGraph<ADTisCDT,GraphAttrs,NodeAttrs,EdgeAttrs,LayoutUpdates,LayoutUpdates,LayoutUpdates> DynaDAGLayout;
 
 } // namespace DynaDAG
 } // namespace Dynagraph

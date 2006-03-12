@@ -19,27 +19,27 @@
 
 namespace Dynagraph {
 
-template<typename Layout1,typename Layout2>
+template<typename Graph1,typename Graph2>
 struct ChangeTranslator {
-	virtual void Translate(ChangeQueue<Layout1> &Q1,ChangeQueue<Layout2> &Q2) = 0;
+	virtual void Translate(ChangeQueue<Graph1> &Q1,ChangeQueue<Graph2> &Q2) = 0;
 	virtual ~ChangeTranslator() {}
 };
 
-template<typename OuterLayout,typename InnerLayout>
-struct ChangeSubProcessor : ChangeProcessor<OuterLayout> {
-	ChangeTranslator<OuterLayout,InnerLayout> *xlateIn;
-	ChangeProcessor<InnerLayout> *processor;
-	ChangeTranslator<InnerLayout,OuterLayout> *xlateOut;
+template<typename OuterGraph,typename InnerGraph>
+struct ChangeSubProcessor : ChangeProcessor<OuterGraph> {
+	ChangeTranslator<OuterGraph,InnerGraph> *xlateIn;
+	ChangeProcessor<InnerGraph> *processor;
+	ChangeTranslator<InnerGraph,OuterGraph> *xlateOut;
 
-	ChangeSubProcessor(OuterLayout *client,OuterLayout *current,
-		ChangeTranslator<OuterLayout,InnerLayout> *xlateIn,
-		ChangeProcessor<InnerLayout> *processor,
-		ChangeTranslator<InnerLayout,OuterLayout> *xlateOut)
-		: ChangeProcessor<OuterLayout>(client,current),xlateIn(xlateIn),processor(processor),xlateOut(xlateOut)
+	ChangeSubProcessor(OuterGraph *client,OuterGraph *current,
+		ChangeTranslator<OuterGraph,InnerGraph> *xlateIn,
+		ChangeProcessor<InnerGraph> *processor,
+		ChangeTranslator<InnerGraph,OuterGraph> *xlateOut)
+		: ChangeProcessor<OuterGraph>(client,current),xlateIn(xlateIn),processor(processor),xlateOut(xlateOut)
 	{}
 
-	void Process(ChangeQueue<OuterLayout> &Q) {
-		ChangeQueue<InnerLayout> Q2;
+	void Process(ChangeQueue<OuterGraph> &Q) {
+		ChangeQueue<InnerGraph> Q2;
 		xlateIn->Translate(Q,Q2);
 		processor->Process(Q2);
 		xlateOut->Translate(Q2,Q);

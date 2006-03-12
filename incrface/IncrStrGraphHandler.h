@@ -34,21 +34,21 @@ struct IncrStrGraphHandler : IncrLangEvents {
     bool maybe_go();
 
 	typename NGraph::Node *fetch_node(DString name,bool create) {
-		typename NGraph::Node *n = world_.fetch_node(name,create);
+		typename NGraph::Node *n = world_.fetch_node(name,create).first;
 		if(!n)
-			throw IncrNodeDoesNotExist(name);
+			throw DGNodeDoesNotExist(name);
 		return n;
 	}
 	typename NGraph::Edge *fetch_edge(DString tailname,DString headname,DString edgename,bool create) {
-		typename NGraph::Edge *e = world_.fetch_edge(tailname,headname,edgename,create);
+		typename NGraph::Edge *e = world_.fetch_edge(tailname,headname,edgename,create).first;
 		if(!e)
-			throw IncrEdgeDoesNotExist(edgename);
+			throw DGEdgeDoesNotExist(edgename);
 		return e;
 	}
 	typename NGraph::Edge *fetch_edge(DString edgename,bool create) {
 		typename NGraph::Edge *e = world_.fetch_edge(edgename);
 		if(!e)
-			throw IncrEdgeDoesNotExist(edgename);
+			throw DGEdgeDoesNotExist(edgename);
 		return e;
 	}
 
@@ -113,7 +113,7 @@ DString IncrStrGraphHandler<NGraph>::incr_ev_ins_node(DString name, const StrAtt
     if(name.empty())
         name = randomName('n');
 	if(fetch_node(name,false))
-		throw IncrNodeReopen(name);
+		throw DGNodeNameUsed(name);
     typename NGraph::Node *n = fetch_node(name,true);
 	typename ChangeQueue<NGraph>::ResultNode result = Q_.InsNode(n);
 	SetAndMark(result.object,attrs);
@@ -127,7 +127,7 @@ DString IncrStrGraphHandler<NGraph>::incr_ev_ins_edge(DString name, DString tail
     if(name.empty())
         name = randomName('e');
 	if(fetch_edge(name))
-		throw IncrEdgeReopen(name);
+		throw DGEdgeNameUsed(name);
     typename NGraph::Edge *e = fetch_edge(tailname,headname,name,true);
 	typename ChangeQueue<NGraph>::ResultEdge result = Q_.InsEdge(e);
 	SetAndMark(result.object,attrs);
