@@ -196,9 +196,11 @@ struct NamedGraph : LGraph<ADTisCDT,GData,NData,EData,GIData,NIData,EIData> {
 		enter(nd,ret);
 		return ret;
 	}
-	typename Graph::Node *get_node(DString name) {
+	typename Graph::Node *fetch_node(DString name,bool create) {
 		if(typename Graph::Node *n = ndict[name])
 			return n;
+		if(!create)
+			return 0;
 		return create_node(name);
 	}
 	std::pair<typename Graph::Edge *,bool> create_edge(typename Graph::Node *tail,typename Graph::Node *head,DString name) {
@@ -213,15 +215,20 @@ struct NamedGraph : LGraph<ADTisCDT,GData,NData,EData,GIData,NIData,EIData> {
 			enter(ed,ret.first);
 		return ret;
 	}
-	typename Graph::Edge *get_edge(DString tail, DString head, DString name) {
+	typename Graph::Edge *fetch_edge(DString tail, DString head, DString name,bool create) {
 		if(typename Graph::Edge *e = edict[name]) {
 			if(gd<Name>(e->tail)!=tail || gd<Name>(e->head)!=head)
 				throw EndNodesDontMatch(name);
 			return e;
 		}
-		typename Graph::Node *t = get_node(tail),
-			*h = get_node(head);
+		if(!create)
+			return 0;
+		typename Graph::Node *t = fetch_node(tail,true),
+			*h = fetch_node(head,true);
         return create_edge(t,h,name).first;
+	}
+	typename Graph::Edge *fetch_edge(DString name) {
+		return edict[name];
 	}
     void rename(typename Graph::Node *n,DString name) {
         ndict[gd<Name>(n)] = 0;

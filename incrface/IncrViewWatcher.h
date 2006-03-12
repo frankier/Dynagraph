@@ -17,18 +17,22 @@
 #ifndef IncrViewWatcher_h
 #define IncrViewWatcher_h
 
-#include "common/LayoutAttrs.h"
 #include "common/ChangeQueue.h"
 
 namespace Dynagraph {
 
-template<typename Layout>
+template<typename Graph>
 struct IncrViewWatcher {
-	virtual void IncrHappened(ChangeQueue<Layout> &Q) = 0;
-	virtual void IncrOpen(ChangeQueue<Layout> &Q) = 0;
-	virtual void IncrClose(ChangeQueue<Layout> &Q) = 0;
-	virtual void IncrNewNode(ChangeQueue<Layout> &Q,typename Layout::Node *n) = 0;
-	virtual void IncrNewEdge(ChangeQueue<Layout> &Q,typename Layout::Edge *e) = 0;
+	virtual void IncrHappened(ChangeQueue<Graph> &Q) = 0;
+	virtual void IncrOpen(ChangeQueue<Graph> &Q) = 0;
+	virtual void IncrClose(ChangeQueue<Graph> &Q) = 0;
+	virtual void IncrNewNode(ChangeQueue<Graph> &Q,typename Graph::Node *n) = 0;
+	virtual void IncrNewEdge(ChangeQueue<Graph> &Q,typename Graph::Edge *e) = 0;
+	// do these belong here?  all i know is the implementation does not belong e.g. in IncrStrGraphHandler
+	// and it neatly encapsulates all output in main's TextViewWatcher
+	virtual void FulfilGraph(Graph *g) = 0;
+	virtual void FulfilNode(typename Graph::Node *n) = 0;
+	virtual void FulfilEdge(typename Graph::Edge *e) = 0;
 };
 
 } // namespace Dynagraph

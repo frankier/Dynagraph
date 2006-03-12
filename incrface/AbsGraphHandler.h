@@ -98,7 +98,7 @@ template<typename NGraph>
 DString AbsGraphHandler<NGraph>::incr_ev_ins_node(DString name, const StrAttrs &attrs, bool merge) {
     if(name.empty())
         name = randomName('n');
-    typename NGraph::Node *n = g->get_node(name);
+    typename NGraph::Node *n = g->fetch_node(name,true);
     gd<StrAttrs>(n) += attrs;
     maybe_go();
     return name;
@@ -107,7 +107,7 @@ template<typename NGraph>
 DString AbsGraphHandler<NGraph>::incr_ev_ins_edge(DString name, DString tailname, DString headname, const StrAttrs &attrs) {
     if(name.empty())
         name = randomName('e');
-    typename NGraph::Edge *e = g->get_edge(tailname,headname,name);
+    typename NGraph::Edge *e = g->fetch_edge(tailname,headname,name,true);
     gd<StrAttrs>(e) += attrs;
     maybe_go();
     return name;

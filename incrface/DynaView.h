@@ -380,22 +380,24 @@ void DynaView<Layout>::incr_ev_del_edge(DString name) {
 }
 template<typename Layout>
 void DynaView<Layout>::incr_ev_req_graph() {
-	std::cout << "fulfil graph " << gd<Name>(&layout) << std::endl;
-	emitGraph(std::cout,&layout);
+	if(watcher)
+		watcher->FulfilGraph(&layout);
 }
 template<typename Layout>
 void DynaView<Layout>::incr_ev_req_node(DString name) {
     typename Layout::Node *n = getNode(name).first;
     if(!n)
         throw IncrNodeDoesNotExist(name);
-	std::cout << "fulfil node " << gd<Name>(&layout) << " " << name << " " << gd<StrAttrs>(n) << std::endl;
+	if(watcher)
+		watcher->FulfilNode(n);
 }
 template<typename Layout>
 void DynaView<Layout>::incr_ev_req_edge(DString name) {
     typename Layout::Edge *e = getEdge(name);
     if(!e)
         throw IncrEdgeDoesNotExist(name);
-	std::cout << "fulfil edge " << gd<Name>(&layout) << " " << name << " " << gd<StrAttrs>(e) << std::endl;
+	if(watcher)
+		watcher->FulfilEdge(e);
 }
 template<typename Layout>
 void DynaView<Layout>::incr_ev_load_strgraph(StrGraph *sg,bool merge, bool del) {

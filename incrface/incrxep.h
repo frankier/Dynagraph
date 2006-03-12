@@ -34,11 +34,11 @@ struct IncrGraphNotOpen : IncrException {
 struct IncrReopenXep : IncrException {
     IncrReopenXep(DString name) : IncrException("Tried to reopen graph",name) {}
 };
-struct IncrEdgeReopen : IncrException {
-    IncrEdgeReopen(DString name) : IncrException("The edge name has already been used",name) {}
-};
 struct IncrNodeReopen : IncrException {
     IncrNodeReopen(DString name) : IncrException("The node name has already been used",name) {}
+};
+struct IncrEdgeReopen : IncrException {
+    IncrEdgeReopen(DString name) : IncrException("The edge name has already been used",name) {}
 };
 struct IncrEdgeTailDoesNotExist : IncrException {
 	IncrEdgeTailDoesNotExist(DString name) : IncrException("Tried to open edge but tail does not exist",name) {}

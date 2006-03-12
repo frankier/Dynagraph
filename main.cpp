@@ -54,23 +54,33 @@ void doOutdot(Layout *l) {
 	}
 }
 
-template<typename Layout>
-struct TextViewWatcher : IncrViewWatcher<Layout> {
-	void IncrHappened(ChangeQueue<Layout> &Q) {
+template<typename Graph>
+struct TextViewWatcher : IncrViewWatcher<Graph> {
+	void IncrHappened(ChangeQueue<Graph> &Q) {
 		emitChanges(cout,Q,gd<Name>(Q.client).c_str());
 		Q.Okay(true);
 		ModifyFlags(Q) = 0;
 		doOutdot(Q.current);
 	}
-	void IncrOpen(ChangeQueue<Layout> &Q) {
-		std::cout << "open graph " << gd<Name>(Q.client) << " " << gd<StrAttrs>(Q.client) << std::endl;
+	void IncrOpen(ChangeQueue<Graph> &Q) {
+		cout << "open graph " << gd<Name>(Q.client) << " " << gd<StrAttrs>(Q.client) << endl;
 		igd<StrAttrChanges>(Q.ModGraph()).clear();
 	}
-	void IncrClose(ChangeQueue<Layout> &Q) {
-		std::cout << "close graph " << gd<Name>(Q.client) << std::endl;
+	void IncrClose(ChangeQueue<Graph> &Q) {
+		cout << "close graph " << gd<Name>(Q.client) << endl;
 	}
-	void IncrNewNode(ChangeQueue<Layout> &Q,typename Layout::Node *n) {}
-	void IncrNewEdge(ChangeQueue<Layout> &Q,typename Layout::Edge *e) {}
+	void IncrNewNode(ChangeQueue<Graph> &Q,typename Graph::Node *n) {}
+	void IncrNewEdge(ChangeQueue<Graph> &Q,typename Graph::Edge *e) {}
+	void FulfilGraph(Graph *g) {
+		cout << "fulfil graph " << gd<Name>(g) << endl;
+		emitGraph(cout,g);
+	}
+	void FulfilNode(typename Graph::Node *n) {
+		cout << "fulfil node " << gd<Name>(n->g) << " " << gd<Name>(n) << " " << gd<StrAttrs>(n) << endl;
+	}
+	void FulfilEdge(typename Graph::Edge *e) {
+		cout << "fulfil edge " << gd<Name>(e->g) << " " << gd<Name>(e) << " " << gd<StrAttrs>(e) << endl;
+	}
 };
 struct IncrCalledBack : IncrCallbacks {
     IncrCalledBack() {
