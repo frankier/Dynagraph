@@ -16,7 +16,7 @@ OBJS = \
 
 HFILES = \
 	AbsGraphHandler.h       DinoMachine.h           DinoMachineHandler.h    DinoPatternLook.h \
-	DinoSearchLook.h        DynaView.h              IncrLangEvents.h        IncrMappings.h \
+	DinoSearchLook.h        DynaView.h              IncrLangEvents.h 	IncrViewWatcher.h \
 	LabelToNameTranslator.h MatchNames.h            createLayoutServer.h    incrcmds.h \
 	incrgram.h              incrout.h               incrparse.h             incrxep.h \
 	two_way_map.h \

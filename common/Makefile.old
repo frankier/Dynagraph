@@ -19,8 +19,8 @@ OBJS = \
 
 HFILES = \
 	BoostLGraph.h           ChangeQueue.h           ColorByAge.h \
-	DiffStrGraph.h          DynagraphServer.h       FindChangeRect.h        GeomUtil.h \
-	Geometry.h              GraphBuffer.h           LGraph-cdt.h            LGraph.h \
+	ChangeProcessor.h       FindChangeRect.h        GeomUtil.h \
+	Geometry.h              LGraph-cdt.h            LGraph.h \
 	LabelPlacer.h           LayoutAttrs.h           LineTricks.h            ShapeGenerator.h \
 	StrAttr.h               StreamGeom.h            StringDict.h \
 	Transform.h             ag2str.h                attrvalues.h            breakList.h \

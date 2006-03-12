@@ -115,7 +115,7 @@ Changes<GO> changes(GO *go) {
 	return Changes<GO>(go);
 }
 template<typename GO>	
-inline std::ostream &operator << (std::ostream &os,Changes<GO> &cgo) {
+inline std::ostream &operator << (std::ostream &os,const Changes<GO> &cgo) {
 	StrAttrChanges &cha = igd<StrAttrChanges>(cgo.go);
 	StrAttrs &att = gd<StrAttrs>(cgo.go);
 	os << "[";

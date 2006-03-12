@@ -560,8 +560,11 @@ int main(int argc, char *args[]) {
 	catch(Assertion sert) {
 		fprintf(stderr,"assertion in file %s, line %d\n",sert.file,sert.line);
 	}
+	catch(DGException2 dgx) {
+		fprintf(stderr,"dynagraph exception: %s: %s\n",dgx.exceptype.c_str(),dgx.param.c_str());
+	}
 	catch(DGException dgx) {
-		fprintf(stderr,"dynagraph exception: %s\n",dgx.exceptype);
+		fprintf(stderr,"dynagraph exception: %s\n",dgx.exceptype.c_str());
 	}
 	catch(...) {
 		fprintf(stderr,"argh!  unknown exception!\n");

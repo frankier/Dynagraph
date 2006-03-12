@@ -27,8 +27,8 @@ extern void initStream(std::ostringstream &o,const Coord &resolution);
 
 template<typename GO>
 void stringifyDrawn(const Drawn &d,GO *go) {
-	ostringstream stream;
-	stream << d << ends;
+	std::ostringstream stream;
+	stream << d << std::ends;
 	SetAndMark(go,"lines",stream.str());
 }
 inline void outBounds(std::ostream &o,const Bounds &b) {
@@ -138,13 +138,13 @@ void stringifyNodeLabels(const NodeLabels &nl,Transform *trans,const Coord &res,
 		{
 			std::ostringstream o;
 			initStream(o,res);
-			o << nl[i].size << ends;
+			o << nl[i].size << std::ends;
 			SetAndMark(go,sname,o.str());
 		}
 		if(nl[i].bounds.valid) {
 			std::ostringstream o;
 			initStream(o,res);
-			o << nl[i].bounds << ends;
+			o << nl[i].bounds << std::ends;
 			SetAndMark(go,posname,o.str());
 		}
 	}
@@ -161,7 +161,7 @@ void stringifyEdgePos(const Line &ep,Transform *trans,const Coord &res,GO *go) {
 			p = trans->out(p);
 		o << p.x << ',' << p.y;
 	}
-    o << ends;
+    o << std::ends;
 	SetAndMark(go,"pos",o.str());
 }
 
