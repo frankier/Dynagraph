@@ -106,6 +106,13 @@ inline bool SetAndMark(GO *go,const StrAttrs &attrs) {
 	return result;
 }
 template<typename GO>
+inline StrAttrs getChanges(GO *go) {
+	StrAttrs ret;
+	for(StrAttrChanges::iterator ci = gd<StrAttrChanges>(go).begin(); ci!=gd<StrAttrChanges>(go).end(); ++ci)
+		ret[*ci] = gd<StrAttrs>(go)[*ci];
+	return ret;
+}
+template<typename GO>
 struct Changes {
 	GO *go;
 	Changes(GO *go) : go(go) {}
@@ -273,6 +280,7 @@ protected:
 };
 
 typedef NamedGraph<ADTisCDT,NamedAttrs,NamedAttrs,NamedAttrs> StrGraph;
+typedef NamedGraph<ADTisCDT,NamedAttrs,NamedAttrs,NamedAttrs,StrAttrChanges,StrAttrChanges,StrAttrChanges> StrChGraph;
 
 } // namespace Dynagraph
 

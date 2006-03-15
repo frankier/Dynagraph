@@ -304,7 +304,7 @@ void DynaDAGServer::sketchEdge(DDPath *path) {
 	assert(head!=tail); // self-edges handled in redrawEdges
 	// if a backedge (head is lower rank than tail), path->first->tail is head
 	// so we have to clip accordingly and then reverse the result (for arrowheads etc.)
-	bool reversed = DDd(DDp(head)->top()).rank<DDd(DDp(tail)->bottom()).rank;
+	bool reversed = path->direction==DDPath::reversed; //DDd(DDp(head)->top()).rank<DDd(DDp(tail)->bottom()).rank;
 	if(reversed)
 		swap(head,tail);
 	if(!path->first) {

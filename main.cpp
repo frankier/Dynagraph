@@ -24,6 +24,9 @@
 #include "incrface/incrparse.h"
 #include "TestTraversals.h"
 
+#include "common/NamedToNamedChangeTranslator.h"
+#include "common/StringLayoutTranslationActions.h"
+
 #define CATCH_XEP
 
 using namespace std;
@@ -110,9 +113,12 @@ struct IncrCalledBack : IncrCallbacks {
 		}
 		IncrLangEvents *ret;
 		if(type=="dynadag") {
-			DynaView<DynaDAGLayout> *view = new DynaView<DynaDAGLayout>(name,g_transform,g_useDotDefaults);
+			//DynaView<DynaDAGLayout> *view = new DynaView<DynaDAGLayout>(name,g_transform,g_useDotDefaults);
+			IncrStrGraphHandler *handler = new IncrStrGraphHandler<StrChGraph>;
 			TextViewWatcher<DynaDAGLayout> *watcher = new TextViewWatcher<DynaDAGLayout>;
-			view->watcher = watcher;
+			handler->watcher_ = watcher;
+
+			handler->next_
 			ret = view;
 			if(setEngs)
 				SetAndMark(view->Q.ModGraph(),"engines",setEngs);

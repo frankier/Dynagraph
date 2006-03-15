@@ -173,7 +173,7 @@ void stringifyAny(Transform *trans,GO *go,Update u) {
 		stringifyDrawn(gd<Drawn>(go),go);
 }
 template<typename Layout>
-void stringifyLayoutChanges(Transform *trans,Layout *l,Update u) {
+void stringsOut(Transform *trans,Layout *l,Update u) {
 	stringifyAny(trans,l,u);
 	GraphGeom &gg = gd<GraphGeom>(l);
 	if(u.flags&DG_UPD_BOUNDS)
@@ -182,7 +182,7 @@ void stringifyLayoutChanges(Transform *trans,Layout *l,Update u) {
 		stringifyChangeRect(gg.changerect,trans,gg.resolution,l);
 }
 template<typename Layout>
-void stringifyNodeChanges(Transform *trans,typename Layout::Node *n,Update u) {
+void stringsOut(Transform *trans,typename Layout::Node *n,Update u) {
 	stringifyAny(trans,n,u);
 	NodeGeom &ng = gd<NodeGeom>(n);
 	GraphGeom &gg = gd<GraphGeom>(n->g);
@@ -194,7 +194,7 @@ void stringifyNodeChanges(Transform *trans,typename Layout::Node *n,Update u) {
 		stringifyNodeLabels(gd<NodeLabels>(n),trans,gg.resolution,n);
 }
 template<typename Layout>
-void stringifyEdgeChanges(Transform *trans,typename Layout::Edge *e,Update u) {
+void stringsOut(Transform *trans,typename Layout::Edge *e,Update u) {
 	stringifyAny(trans,e,u);
 	EdgeGeom &eg = gd<EdgeGeom>(e);
 	GraphGeom &gg = gd<GraphGeom>(e->g);
@@ -217,7 +217,7 @@ void stringsOut(Transform *trans,ChangeQueue<Layout> &Q) {
 		*/
 	}
 	if(ModifyFlags(Q).flags)
-		stringifyLayoutChanges(trans,Q.ModGraph(),ModifyFlags(Q));
+		stringsOut(trans,Q.ModGraph(),ModifyFlags(Q));
 	typename Layout::node_iter ni;
 	typename Layout::graphedge_iter ei;
 	if(llchanged) {
@@ -225,20 +225,20 @@ void stringsOut(Transform *trans,ChangeQueue<Layout> &Q) {
 		// all coordinates have changed because they're based on lower-left corner
 		for(ni = Q.current->nodes().begin(); ni!=Q.current->nodes().end(); ++ni)
 			if(!Q.insN.find(*ni) && !Q.delN.find(*ni))
-				stringifyNodeChanges<Layout>(trans,*ni,DG_UPD_MOVE|igd<Update>(*ni).flags);
+				stringsOut<Layout>(trans,*ni,DG_UPD_MOVE|igd<Update>(*ni).flags);
 		for(ei = Q.current->edges().begin(); ei!=Q.current->edges().end(); ++ei)
 			if(!Q.insE.find(*ei) && !Q.delE.find(*ei))
-				stringifyEdgeChanges<Layout>(trans,*ei,DG_UPD_MOVE|igd<Update>(*ei).flags);
+				stringsOut<Layout>(trans,*ei,DG_UPD_MOVE|igd<Update>(*ei).flags);
 	}
 	else {
 		for(ni = Q.insN.nodes().begin(); ni!=Q.insN.nodes().end(); ++ni)
-			stringifyNodeChanges<Layout>(trans,*ni,AllFlags);
+			stringsOut<Layout>(trans,*ni,AllFlags);
 		for(ei = Q.insE.edges().begin(); ei!=Q.insE.edges().end(); ++ei)
-			stringifyEdgeChanges<Layout>(trans,*ei,AllFlags);
+			stringsOut<Layout>(trans,*ei,AllFlags);
 		for(ni = Q.modN.nodes().begin(); ni!=Q.modN.nodes().end(); ++ni)
-			stringifyNodeChanges<Layout>(trans,*ni,igd<Update>(*ni));
+			stringsOut<Layout>(trans,*ni,igd<Update>(*ni));
 		for(ei = Q.modE.edges().begin(); ei!=Q.modE.edges().end(); ++ei)
-			stringifyEdgeChanges<Layout>(trans,*ei,igd<Update>(*ei));
+			stringsOut<Layout>(trans,*ei,igd<Update>(*ei));
 	}
 }
 
