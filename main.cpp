@@ -85,6 +85,25 @@ struct TextViewWatcher : IncrViewWatcher<Graph> {
 		cout << "fulfil edge " << gd<Name>(e->g) << " " << gd<Name>(e) << " " << gd<StrAttrs>(e) << endl;
 	}
 };
+template<typename Layout>
+IncrLangEvents *createHandler(DString name,DString setEngs) {
+	IncrStrGraphHandler *handler = new IncrStrGraphHandler<StrChGraph>;
+	TextViewWatcher<StrChGraph> *watcher = new TextViewWatcher<StrChGraph>;
+	handler->watcher_ = watcher;
+	NamedToNamedChangeTranslator<StrChGraph,Layout,StringToLayoutTranslationActions<StrChGraph,Layout> > *xlateIn = 
+		new NamedToNamedChangeTranslator<StrChGraph,Layout,StringToLayoutTranslationActions<StrChGraph,Layout> >
+			(StringToLayoutTranslationActions<StrChGraph,Layout>(g_transform));
+	NamedToNamedChangeTranslator<Layout,StrChGraph,LayoutToStringTranslationActions<Layout,StrChGraph> > *xlateOut = 
+		new NamedToNamedChangeTranslator<Layout,StrChGraph,LayoutToStringTranslationActions<Layout,StrChGraph> >
+			(LayoutToStringTranslationActions<Layout,StrChGraph>(g_transform));
+
+	ChangeSubProcessor<StrChGraph,Layout> *subproc = new ChangeSubProcessor<StrChGraph,Layout>(&handler->world_,&handler->current_,
+		xlateIn,
+	handler->next_
+	ret = view;
+	if(setEngs)
+		SetAndMark(view->Q.ModGraph(),"engines",setEngs);
+}
 struct IncrCalledBack : IncrCallbacks {
     IncrCalledBack() {
         g_incrCallback = this;
@@ -112,16 +131,9 @@ struct IncrCalledBack : IncrCallbacks {
 				throw DGException2("could not deduce graph type from engine list",engines);
 		}
 		IncrLangEvents *ret;
-		if(type=="dynadag") {
+		if(type=="dynadag") 
+			ret = createHandler<DynaDAGLayout>(name,setEngs);
 			//DynaView<DynaDAGLayout> *view = new DynaView<DynaDAGLayout>(name,g_transform,g_useDotDefaults);
-			IncrStrGraphHandler *handler = new IncrStrGraphHandler<StrChGraph>;
-			TextViewWatcher<DynaDAGLayout> *watcher = new TextViewWatcher<DynaDAGLayout>;
-			handler->watcher_ = watcher;
-
-			handler->next_
-			ret = view;
-			if(setEngs)
-				SetAndMark(view->Q.ModGraph(),"engines",setEngs);
 		}
 		else if(type=="fdp") {
 			DynaView<FDPLayout> *view = new DynaView<FDPLayout>(name,g_transform,g_useDotDefaults);
