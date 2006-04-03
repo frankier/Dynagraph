@@ -14,15 +14,15 @@
 *                   http://dynagraph.org                  *
 **********************************************************/
 
-#ifndef StringLayoutTranslationActions_h
-#define StringLayoutTranslationActions_h
+#ifndef StringLayoutTranslator_h
+#define StringLayoutTranslator_h
 
 namespace Dynagraph {
 
 template<typename StringGraph,typename Layout>
-struct StringToLayoutTranslationActions {
+struct StringToLayoutTranslator {
 	Transform *transform_;
-	StringToLayoutTranslationActions(Transform *transform) : transform_(transform) {}
+	StringToLayoutTranslator(Transform *transform) : transform_(transform) {}
 	void ModifyGraph(StringGraph *sg,Layout *lg) {
 		SetAndMark(lg,getChanges(sg));
 	}
@@ -42,9 +42,9 @@ struct StringToLayoutTranslationActions {
 	void DeleteEdge(typename StringGraph::Edge *se,typename Layout::Edge *le) {}
 };
 template<typename Layout,typename StringGraph>
-struct LayoutToStringTranslationActions {
+struct LayoutToStringTranslator {
 	Transform *transform_;
-	LayoutToStringTranslationActions(Transform *transform) : transform_(transform) {}
+	LayoutToStringTranslator(Transform *transform) : transform_(transform) {}
 	void ModifyGraph(Layout *lg,StringGraph *sg) {
 		stringsOut<Layout>(transform_,lg,gd<Update>(lg));
 		SetAndMark(sg,getChanges(lg));
@@ -71,4 +71,4 @@ struct LayoutToStringTranslationActions {
 
 } // namespace Dynagraph
 
-#endif // StringLayoutTranslationActions_h
+#endif // StringLayoutTranslator_h
