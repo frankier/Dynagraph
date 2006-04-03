@@ -23,7 +23,7 @@
 #include "common/stringsOut.h"
 #include "common/emitGraph.h"
 //#include "common/engine_replacement.h"
-#include "createLayoutServer.h"
+#include "createEngine.h"
 #include "common/randomName.h"
 #include "common/Transform.h"
 #include "DinoMachine.h"
@@ -136,7 +136,7 @@ void DynaView<Layout>::createServer() {
 		delete dgserver;
 		dgserver = 0;
 	}
-	dgserver = createLayoutServer<Layout>(&layout,&current);
+	dgserver = createEngine<Layout>(&layout,&current);
 }
 template<typename Layout>
 void DynaView<Layout>::completeReplacement() {
