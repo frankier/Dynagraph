@@ -14,7 +14,7 @@
 *                   http://dynagraph.org                  *
 **********************************************************/
 
-
+#pragma warning (disable : 4503)
 #include "common/LayoutAttrs.h"
 #include "DinoMachineTranslator.h"
 #include "LabelToNameTranslator.h"

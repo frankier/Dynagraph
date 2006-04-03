@@ -14,6 +14,9 @@
 *                   http://dynagraph.org                  *
 **********************************************************/
 
+#ifndef IncrLangEvents_h
+#define IncrLangEvents_h
+
 namespace Dynagraph {
 
 struct IncrLangEvents {
@@ -50,3 +53,5 @@ struct IncrSetHandlerFirst : DGException { IncrSetHandlerFirst() : DGException("
 extern void incr_set_allow_reopen(DString name,bool whether);
 
 } // namespace Dynagraph
+
+#endif // IncrLangEvents_h

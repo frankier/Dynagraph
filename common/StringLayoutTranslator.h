@@ -22,9 +22,10 @@ namespace Dynagraph {
 template<typename StringGraph,typename Layout>
 struct StringToLayoutTranslator {
 	Transform *transform_;
-	StringToLayoutTranslator(Transform *transform) : transform_(transform) {}
+	bool useDotDefaults_;
+	StringToLayoutTranslator(Transform *transform,bool useDotDefaults) : transform_(transform),useDotDefaults_(useDotDefaults) {}
 	void ModifyGraph(StringGraph *sg,Layout *lg) {
-		SetAndMark(lg,getChanges(sg));
+		stringsIn<Layout>(transform_,useDotDefaults_,lg,getChanges(sg),true);
 	}
 	void InsertNode(typename StringGraph::Node *sn,typename Layout::Node *ln) {
 		stringsIn<Layout>(transform_,ln,gd<StrAttrs>(sn),true);
@@ -46,7 +47,7 @@ struct LayoutToStringTranslator {
 	Transform *transform_;
 	LayoutToStringTranslator(Transform *transform) : transform_(transform) {}
 	void ModifyGraph(Layout *lg,StringGraph *sg) {
-		stringsOut<Layout>(transform_,lg,gd<Update>(lg));
+		stringsOut<Layout>(transform_,lg,igd<Update>(lg));
 		SetAndMark(sg,getChanges(lg));
 	}
 	void InsertNode(typename Layout::Node *ln,typename StringGraph::Node *sn) {
@@ -58,11 +59,11 @@ struct LayoutToStringTranslator {
 		gd<StrAttrs>(se) = gd<StrAttrs>(le);
 	}
 	void ModifyNode(typename Layout::Node *ln,typename StringGraph::Node *sn) {
-		stringsOut<Layout>(transform_,ln,gd<Update>(ln));
+		stringsOut<Layout>(transform_,ln,igd<Update>(ln));
 		SetAndMark(sn,getChanges(ln));
 	}
 	void ModifyEdge(typename Layout::Edge *le,typename StringGraph::Edge *se) {
-		stringsOut<Layout>(transform_,le,gd<Update>(le));
+		stringsOut<Layout>(transform_,le,igd<Update>(le));
 		SetAndMark(se,getChanges(le));
 	}
 	void DeleteNode(typename Layout::Node *ln,typename StringGraph::Node *sn) {}

@@ -108,7 +108,7 @@ inline bool SetAndMark(GO *go,const StrAttrs &attrs) {
 template<typename GO>
 inline StrAttrs getChanges(GO *go) {
 	StrAttrs ret;
-	for(StrAttrChanges::iterator ci = gd<StrAttrChanges>(go).begin(); ci!=gd<StrAttrChanges>(go).end(); ++ci)
+	for(StrAttrChanges::iterator ci = igd<StrAttrChanges>(go).begin(); ci!=igd<StrAttrChanges>(go).end(); ++ci)
 		ret[*ci] = gd<StrAttrs>(go)[*ci];
 	return ret;
 }

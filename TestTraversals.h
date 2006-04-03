@@ -14,6 +14,7 @@
 *                   http://dynagraph.org                  *
 **********************************************************/
 
+#include "common/Transform.h"
 extern Dynagraph::Transform *g_transform;
 
 namespace Dynagraph {

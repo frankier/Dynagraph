@@ -18,7 +18,9 @@
 #include "common/ChangeQueue.h"
 #include "common/ChangeProcessor.h"
 #include "common/diff_strgraph.h"
+#include "common/randomName.h"
 #include "IncrWorld.h"
+#include "IncrLangEvents.h"
 #include "IncrViewWatcher.h"
 
 namespace Dynagraph {
@@ -93,7 +95,8 @@ bool IncrStrGraphHandler<NGraph>::maybe_go() {
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_open_graph(DString graph,const StrAttrs &attrs) {
     gd<Name>(&world_->whole_) = graph;
-    gd<StrAttrs>(&world_->whole_) = attrs;
+    SetAndMark(Q_.ModGraph(),attrs);
+	maybe_go();
     if(watcher_)
 		watcher_->IncrOpen(Q_);
 }

@@ -18,15 +18,20 @@
 #include <stdio.h>
 #include <fstream>
 #include "common/ag2str.h"
-#include "incrface/DynaView.h"
+#include "common/emitGraph.h"
+#include "common/stringsIn.h"
+#include "common/stringsOut.h"
 #include "dynadag/DynaDAG.h"
+#include "fdp/fdp.h"
 #include "incrface/incrout.h"
 #include "incrface/incrparse.h"
+#include "incrface/createEngine.h"
 #include "TestTraversals.h"
 
 #include "incrface/IncrStrGraphHandler.h"
 #include "common/NamedToNamedChangeTranslator.h"
-#include "common/StringLayoutTranslationActions.h"
+#include "common/InternalTranslator.h"
+#include "common/StringLayoutTranslator.h"
 
 #define CATCH_XEP
 
@@ -87,14 +92,21 @@ struct TextViewWatcher : ChangeProcessor<Graph>,IncrViewWatcher<Graph> {
 	}
 };
 template<typename Layout>
-IncrLangEvents *createHandler(DString name,DString setEngs) {
-	IncrWorld<GeneralLayout> *world = new IncrWorld<GeneralLayout>;
-	IncrStrGraphHandler<GeneralLayout> *handler = new IncrStrGraphHandler<GeneralLayout>(world);
-	TextViewWatcher<GeneralLayout> *watcher = new TextViewWatcher<GeneralLayout>;
+IncrLangEvents *createHandler(DString name,DString engines,bool setEngs) {
+	IncrWorld<Layout> *world = new IncrWorld<Layout>;
+	IncrStrGraphHandler<Layout> *handler = new IncrStrGraphHandler<Layout>(world);
+	TextViewWatcher<Layout> *watcher = new TextViewWatcher<Layout>;
 	handler->watcher_ = watcher;
-	UpdateCurrentProcessor<GeneralLayout> *updater = new UpdateCurrentProcessor<GeneralLayout>(&world->whole_,&world->current_);
-	updater->next_ = watcher;
-	handler->next_ = updater;
+	typedef InternalTranslator2<Layout,StringToLayoutTranslator<Layout,Layout> > StringsInEngine;
+	typedef InternalTranslator2<Layout,LayoutToStringTranslator<Layout,Layout> > StringsOutEngine;
+	StringsInEngine *xlateIn = new StringsInEngine(StringToLayoutTranslator<Layout,Layout>(g_transform,g_useDotDefaults));
+	StringsOutEngine *xlateOut = new StringsOutEngine(g_transform);
+	xlateOut->next_ = watcher;
+	xlateIn->next_ = createEngine(engines,&world->whole_,&world->current_,xlateOut);
+	handler->next_ = xlateIn;
+	if(setEngs) 
+		SetAndMark(handler->Q_.ModGraph(),"engines",engines);
+
 	/*
 	NamedToNamedChangeTranslator<StrChGraph,Layout,StringToLayoutTranslationActions<StrChGraph,Layout> > *xlateIn = 
 		new NamedToNamedChangeTranslator<StrChGraph,Layout,StringToLayoutTranslationActions<StrChGraph,Layout> >
@@ -121,16 +133,18 @@ struct IncrCalledBack : IncrCallbacks {
     }
     IncrLangEvents *incr_cb_create_handler(Name name,const StrAttrs &attrs) {
 		StrAttrs::const_iterator ai = attrs.find("type");
-		DString type,setEngs;
+		DString type,engines;
+		bool setEngs=false;
 		if(ai!=attrs.end()) 
 			type = ai->second;
 		else {
 			StrAttrs::const_iterator ai = attrs.find("engines");
-			DString engines;
 			if(ai!=attrs.end())
 				engines = ai->second;
-			else
-				setEngs = engines = "shapegen,dynadag,labels";
+			else {
+				engines = "shapegen,dynadag,labels";
+				setEngs = true;
+			}
 			if(engines.find("dynadag",0)!=DString::npos)
 				type = "dynadag";
 			else if(engines.find("fdp",0)!=DString::npos)
@@ -140,7 +154,9 @@ struct IncrCalledBack : IncrCallbacks {
 		}
 		IncrLangEvents *ret;
 		if(type=="dynadag") 
-			ret = createHandler<DynaDAGLayout>(name,setEngs);
+			ret = createHandler<DynaDAGLayout>(name,engines,setEngs);
+		else if(type=="fdp")
+			ret = createHandler<FDPLayout>(name,engines,setEngs);
 		/*
 			//DynaView<DynaDAGLayout> *view = new DynaView<DynaDAGLayout>(name,g_transform,g_useDotDefaults);
 		}
@@ -150,7 +166,6 @@ struct IncrCalledBack : IncrCallbacks {
 			view->watcher = watcher;
 			ret = view;
 			if(setEngs)
-				SetAndMark(view->Q.ModGraph(),"engines",setEngs);
 		}
 		*/
     	return ret;

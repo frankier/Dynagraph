@@ -56,7 +56,7 @@ struct creators<FDP::FDPLayout> : std::map<DString,EngineCreator<FDP::FDPLayout>
 };
 
 template<typename Graph>
-ChangeProcessor<Graph> *createEngine(DString engines,Graph *whole,Graph *current) {
+ChangeProcessor<Graph> *createEngine(DString engines,Graph *whole,Graph *current,ChangeProcessor<Graph> *after = 0) {
 	if(engines.empty())
 		throw DGException("engine(s) were not specified on call to createLayoutEngine");
 
@@ -85,7 +85,9 @@ ChangeProcessor<Graph> *createEngine(DString engines,Graph *whole,Graph *current
 		last->next_ = now = crea(whole,current);
 		last = now;
 	}
-	last->next_ = fcrafter;
+	last->next_ = now = fcrafter;
+	last = now;
+	last->next_ = after;
 
 	return ret;
 }

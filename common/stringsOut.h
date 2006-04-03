@@ -14,6 +14,10 @@
 *                   http://dynagraph.org                  *
 **********************************************************/
 
+#include "Transform.h"
+#include "Geometry.h"
+#include "ChangeQueue.h"
+
 #ifndef stringsOut_h
 #define stringsOut_h
 
