@@ -26,17 +26,17 @@ namespace Dynagraph {
 */
 template<typename Graph>
 struct ChangeQueue {
-	// the client edits this supergraph of server's current layout
+	// the whole edits this supergraph of server's current layout
 	// then calls the methods below to signal the changes in the subgraphs
-	Graph * const client, * const current;
+	Graph * const whole, * const current;
 	Graph insN,modN,delN,
 		insE,modE,delE,
 		unbornN,unbornE; // inserted and then deleted before ever realized
 
-	ChangeQueue(Graph *client,Graph *current) : client(client),current(current),
-	insN(client),modN(client),delN(client),insE(client),modE(client),delE(client),unbornN(client),unbornE(client) {}
-	ChangeQueue(ChangeQueue &copy) : client(copy.client),current(copy.current),
-	insN(client),modN(client),delN(client),insE(client),modE(client),delE(client),unbornN(client),unbornE(client) {
+	ChangeQueue(Graph *whole,Graph *current) : whole(whole),current(current),
+	insN(whole),modN(whole),delN(whole),insE(whole),modE(whole),delE(whole),unbornN(whole),unbornE(whole) {}
+	ChangeQueue(ChangeQueue &copy) : whole(copy.whole),current(copy.current),
+	insN(whole),modN(whole),delN(whole),insE(whole),modE(whole),delE(whole),unbornN(whole),unbornE(whole) {
 		insN = copy.insN;
 		modN = copy.modN;
 		delN = copy.delN;
@@ -53,15 +53,15 @@ struct ChangeQueue {
 	};
 	typedef Result<typename Graph::Node> NodeResult;
 	typedef Result<typename Graph::Edge> EdgeResult;
-	NodeResult InsNode(typename Graph::Node *n);
-	EdgeResult InsEdge(typename Graph::Edge *e);
+	NodeResult InsNode(typename Graph::Node *n,bool checkRedundancy=true);
+	EdgeResult InsEdge(typename Graph::Edge *e,bool checkRedundancy=true);
 	NodeResult ModNode(typename Graph::Node *n);
 	EdgeResult ModEdge(typename Graph::Edge *e);
 	Graph *ModGraph() {
 		return &modN;
 	}
-	NodeResult DelNode(typename Graph::Node *n);
-	EdgeResult DelEdge(typename Graph::Edge *e);
+	NodeResult DelNode(typename Graph::Node *n,bool checkRedundancy=true);
+	EdgeResult DelEdge(typename Graph::Edge *e,bool checkRedundancy=true);
 	// called by server to update current subgraph based on current changes
 	void UpdateCurrent();
 
@@ -97,7 +97,7 @@ struct ChangeQueue {
 	};
 };
 template<typename Graph>
-typename ChangeQueue<Graph>::NodeResult ChangeQueue<Graph>::InsNode(typename Graph::Node *n) {
+typename ChangeQueue<Graph>::NodeResult ChangeQueue<Graph>::InsNode(typename Graph::Node *n,bool checkRedundancy) {
 	Result<typename Graph::Node> result;
 	if(delN.erase(n)) { // del+ins = mod!
 		assert(current->find(n));
@@ -108,7 +108,7 @@ typename ChangeQueue<Graph>::NodeResult ChangeQueue<Graph>::InsNode(typename Gra
 		result.action = inserted;
 		result.object = insN.insert(n).first;
 	}
-	else if(modN.find(n)||insN.find(n)||current->find(n))
+	else if(modN.find(n)||(checkRedundancy&&insN.find(n))||current->find(n))
 		throw InsertInserted();
 	else {
 		result.action = inserted;
@@ -117,7 +117,7 @@ typename ChangeQueue<Graph>::NodeResult ChangeQueue<Graph>::InsNode(typename Gra
 	return result;
 }
 template<typename Graph>
-typename ChangeQueue<Graph>::EdgeResult ChangeQueue<Graph>::InsEdge(typename Graph::Edge *e) {
+typename ChangeQueue<Graph>::EdgeResult ChangeQueue<Graph>::InsEdge(typename Graph::Edge *e,bool checkRedundancy) {
 	Result<typename Graph::Edge> result;
 	if(delE.inducing_erase_edge(e)) { // del+ins = mod!
 		assert(current->find(e));
@@ -128,7 +128,7 @@ typename ChangeQueue<Graph>::EdgeResult ChangeQueue<Graph>::InsEdge(typename Gra
 		result.action = inserted;
 		result.object = insE.insert(e).first;
 	}
-	else if(modE.find(e)||insE.find(e)||current->find(e))
+	else if(modE.find(e)||(checkRedundancy&&insE.find(e))||current->find(e))
 		throw InsertInserted();
 	else {
 		result.action = inserted;
@@ -171,9 +171,9 @@ typename ChangeQueue<Graph>::EdgeResult ChangeQueue<Graph>::ModEdge(typename Gra
 	return result;
 }
 template<typename Graph>
-typename ChangeQueue<Graph>::NodeResult ChangeQueue<Graph>::DelNode(typename Graph::Node *n) {
+typename ChangeQueue<Graph>::NodeResult ChangeQueue<Graph>::DelNode(typename Graph::Node *n,bool checkRedundancy) {
 	Result<typename Graph::Node> result;
-	if(delN.find(n))
+	if(checkRedundancy&&delN.find(n))
 		throw DeleteDeleted();
 	if(insN.find(n)) { //ins+del = do nothing
 		// delete edges that haven't yet been inserted
@@ -208,9 +208,9 @@ typename ChangeQueue<Graph>::NodeResult ChangeQueue<Graph>::DelNode(typename Gra
 	return result;
 }
 template<typename Graph>
-typename ChangeQueue<Graph>::EdgeResult ChangeQueue<Graph>::DelEdge(typename Graph::Edge *e) {
+typename ChangeQueue<Graph>::EdgeResult ChangeQueue<Graph>::DelEdge(typename Graph::Edge *e,bool checkRedundancy) {
 	Result<typename Graph::Edge> result;
-	if(delE.find(e))
+	if(checkRedundancy&&delE.find(e))
 		throw DeleteDeleted();
 	if(typename Graph::Edge *ie = insE.find(e)) { //ins+del = do nothing
 		result.action = nothing;
@@ -265,21 +265,21 @@ void ChangeQueue<Graph>::Okay(bool doDelete) {
 	if(doDelete) {
 		for(typename Graph::graphedge_iter j = delE.edges().begin(); j!=delE.edges().end();) {
 			typename Graph::Edge *e = *j++;
-			check(client->erase_edge(e));
+			check(whole->erase_edge(e));
 		}
         delE.clear(); // (clear nodes)
 		for(typename Graph::node_iter i = delN.nodes().begin(); i!=delN.nodes().end();) {
 			typename Graph::Node *n = *i++;
-			check(client->erase_node(n));
+			check(whole->erase_node(n));
 		}
 		for(typename Graph::graphedge_iter j = unbornE.edges().begin(); j!=unbornE.edges().end();) {
 			typename Graph::Edge *e = *j++;
-			check(client->erase_edge(e));
+			check(whole->erase_edge(e));
 		}
         unbornE.clear(); // (clear nodes)
 		for(typename Graph::node_iter i = unbornN.nodes().begin(); i!=unbornN.nodes().end();) {
 			typename Graph::Node *n = *i++;
-			check(client->erase_node(n));
+			check(whole->erase_node(n));
 		}
 	}
 	else {
@@ -292,19 +292,19 @@ void ChangeQueue<Graph>::Okay(bool doDelete) {
 }
 template<typename Graph>
 ChangeQueue<Graph> &ChangeQueue<Graph>::operator=(ChangeQueue<Graph> &Q) {
-	assert(client==Q.client);
+	assert(whole==Q.whole);
 	insN = Q.insN;
 	modN = Q.modN;
 	delN = Q.delN;
 	insE = Q.insE;
 	modE = Q.modE;
 	delE = Q.delE;
-	client->idat = Q.client->idat; 
+	whole->idat = Q.whole->idat; 
 	return *this;
 }
 template<typename Graph>
 ChangeQueue<Graph> &ChangeQueue<Graph>::operator+=(ChangeQueue<Graph> &Q) {
-	assert(client==Q.client);
+	assert(whole==Q.whole);
 	typename Graph::node_iter ni;
 	typename Graph::graphedge_iter ei;
 	for(ni = Q.insN.nodes().begin(); ni!=Q.insN.nodes().end(); ++ni)

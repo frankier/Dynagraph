@@ -16,8 +16,8 @@
 
 
 #include "common/LayoutAttrs.h"
-#include "DynaView.h"
 #include "common/ag2str.h"
+#include "DinoMachine.h"
 //#include "common/bufferGraphStream.h"
 #include "incrxep.h"
 #include "incrparse.h"

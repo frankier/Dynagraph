@@ -209,7 +209,7 @@ void stringsOut(Transform *trans,ChangeQueue<Layout> &Q) {
 		// grappa used to require bounding box with lower left = (0,0)
 		// this means you have to resend all coords pretty much every step
 		// but there's probably a legitimate purpose for this disabled feature
-		Coord ll = gd<GraphGeom>(Q.client).bounds.LowerLeft();
+		Coord ll = gd<GraphGeom>(Q.whole).bounds.LowerLeft();
 		if(ll!=trans->ll) {
 			trans->ll = ll;
 			llchanged = true;

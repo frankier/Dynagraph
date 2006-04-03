@@ -69,7 +69,7 @@ static DDModel::Node *boundingNode(Config &config,DDModel::Node *inp, LeftRight 
 
 double findBound(Config &config,const Bounds &bb,DDModel::Node *u, LeftRight side) {
 	assert(bb.valid);
-	double sep = gd<GraphGeom>(config.client).separation.x/2.0;
+	double sep = gd<GraphGeom>(config.whole).separation.x/2.0;
 	double ret;
 	if(DDModel::Node *w = boundingNode(config,u,side)) {
 		if(side==LEFT)
@@ -325,7 +325,7 @@ void Spliner::adjustPath(DDPath *path) {
 			x = rb;
 
 		/* don't move if it's too small */
-		double least_move = gd<GraphGeom>(config.client).separation.x;
+		double least_move = gd<GraphGeom>(config.whole).separation.x;
 		if(x < rb && x > lb && absol(x - DDd(*ni).cur.x) >= least_move)
 			DDd(*ni).cur.x = x;
 		/* it's possible that local_crossing() swaps *ni order */
@@ -366,7 +366,7 @@ bool Spliner::MakeEdgeSpline(DDPath *path,SpliningLevel splineLevel) { //,Obstac
 
 	Line &unclipped = path->unclippedPath;
 	if(path->layoutE->tail==path->layoutE->head) {	/* self arc */
-		Coord sep = gd<GraphGeom>(config.client).separation;
+		Coord sep = gd<GraphGeom>(config.whole).separation;
 		unclipped.degree = 3;
 		Coord farpt(DDd(tl).multi->pos().x + config.RightExtent(tl) + 2.0 * sep.x,
 			(tailpt.y + headpt.y) / 2.0);

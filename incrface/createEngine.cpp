@@ -20,7 +20,7 @@
 #include "shortspline/ObAvSplinerEngine.h"
 #include "dynadag/DynaDAG.h"
 #include "common/ColorByAge.h"
-#include "createLayoutServer.h"
+#include "createEngine.h"
 #include "common/LabelPlacer.h"
 #include "common/ShapeGenerator.h"
 
@@ -31,24 +31,28 @@ namespace Dynagraph {
 using DynaDAG::DynaDAGLayout;
 using FDP::FDPLayout;
 
+creators<GeneralLayout> creators<GeneralLayout>::the_creators;
+creators<GeneralLayout>::creators()  {
+	creators &me = *this;
+	me["labels"] = EngineCreatorInstance<LabelPlacer<GeneralLayout> >::create;
+	me["shapegen"] = EngineCreatorInstance<ShapeGenerator<GeneralLayout> >::create;
+	me["colorbyage"] = EngineCreatorInstance<ColorByAge<GeneralLayout> >::create;
+}
 creators<DynaDAGLayout> creators<DynaDAGLayout>::the_creators;
-
 creators<DynaDAGLayout>::creators()  {
 	creators &me = *this;
-	me["dynadag"] = ServerCreatorInstance<DynaDAG::DynaDAGServer>::create;
-	me["labels"] = ServerCreatorInstance<LabelPlacer<DynaDAGLayout> >::create;
-	me["shapegen"] = ServerCreatorInstance<ShapeGenerator<DynaDAGLayout> >::create;
-	me["colorbyage"] = ServerCreatorInstance<ColorByAge<DynaDAGLayout> >::create;
+	me["dynadag"] = EngineCreatorInstance<DynaDAG::DynaDAGServer>::create;
+	me["labels"] = EngineCreatorInstance<LabelPlacer<DynaDAGLayout> >::create;
+	me["shapegen"] = EngineCreatorInstance<ShapeGenerator<DynaDAGLayout> >::create;
 }
 creators<FDPLayout> creators<FDPLayout>::the_creators;
 creators<FDPLayout>::creators() {
 	creators &me = *this;
-	me["fdp"] = ServerCreatorInstance<FDP::FDPServer>::create;
-	me["voronoi"] = ServerCreatorInstance<Voronoi::VoronoiServer>::create;
-	me["visspline"] = ServerCreatorInstance<ObAvSplinerEngine<FDPLayout> >::create;
-	me["labels"] = ServerCreatorInstance<LabelPlacer<FDPLayout> >::create;
-	me["shapegen"] = ServerCreatorInstance<ShapeGenerator<FDPLayout> >::create;
-	me["colorbyage"] = ServerCreatorInstance<ColorByAge<FDPLayout> >::create;
+	me["fdp"] = EngineCreatorInstance<FDP::FDPServer>::create;
+	me["voronoi"] = EngineCreatorInstance<Voronoi::VoronoiServer>::create;
+	me["visspline"] = EngineCreatorInstance<ObAvSplinerEngine<FDPLayout> >::create;
+	me["labels"] = EngineCreatorInstance<LabelPlacer<FDPLayout> >::create;
+	me["shapegen"] = EngineCreatorInstance<ShapeGenerator<FDPLayout> >::create;
 }
 
 } // namespace Dynagraph

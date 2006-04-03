@@ -14,21 +14,15 @@
 *                   http://dynagraph.org                  *
 **********************************************************/
 
-#ifndef DynaDAGLayout_h
-#define DynaDAGLayout_h
+#ifndef GeneralLayout_h
+#define GeneralLayout_h
 
 #include "common/LayoutAttrs.h"
 
 namespace Dynagraph {
-namespace DynaDAG {
 
-// until DynaDAGEngine becomes a template, this is the minimal graph type 
-// that can be used both for incrface and by the engine
-typedef NamedGraph<ADTisCDT,EverythingGraphAttrs,EverythingNodeAttrs,EverythingEdgeAttrs,
-	LayoutUpdates,LayoutUpdates,LayoutUpdates> DynaDAGLayout;
+typedef NamedGraph<ADTisCDT,GeneralGraphAttrs,GeneralNodeAttrs,GeneralEdgeAttrs,LayoutUpdates,LayoutUpdates,LayoutUpdates> GeneralLayout;
 
-} // namespace DynaDAG
 } // namespace Dynagraph
 
-
-#endif // DynaDAGLayout_h
+#endif // GeneralLayout_h

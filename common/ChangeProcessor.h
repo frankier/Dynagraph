@@ -21,42 +21,35 @@
 
 namespace Dynagraph {
 
-template<typename Layout>
+// a ChangeProcessor client should send changes on without expecting any response
+// the server is allowed to change the Q and is expected to eventually realize the changes 
+template<typename Graph>
 struct ChangeProcessor {
-	typedef Layout LayoutType;
-	Layout *const client, *const current;
-
-	virtual void Process(ChangeQueue<Layout> &Q) = 0;
-	ChangeProcessor(Layout *client,Layout *current) : client(client), current(current) {}
+	typedef Graph GraphType;
+	virtual void Process(ChangeQueue<Graph> &Q) = 0; 
 	virtual ~ChangeProcessor() {}
 };
-template<typename Layout>
-struct CompoundChangeProcessor : ChangeProcessor<Layout> {
-	typedef std::vector<ChangeProcessor<Layout>*> ServerV;
-	ServerV actors;
-	void Process(ChangeQueue<Layout> &Q);
-	CompoundChangeProcessor(Layout *client,Layout *currentLayout) : ChangeProcessor<Layout>(client,currentLayout) {}
-	~CompoundChangeProcessor();
+template<typename Graph1,typename Graph2>
+struct LinkedChangeProcessor : ChangeProcessor<Graph1> {
+	ChangeProcessor<Graph2> *next_;
+	LinkedChangeProcessor(ChangeProcessor<Graph2> *next=0) : next_(next) {}
+	virtual ~LinkedChangeProcessor() {
+		delete next_;
+	}
+	void NextProcess(ChangeQueue<Graph2> &Q) {
+		if(next_)
+			next_->Process(Q);
+	}
 };
-template<typename Layout>
-void CompoundChangeProcessor<Layout>::Process(ChangeQueue<Layout> &Q) {
-	for(typename ServerV::iterator i = actors.begin(); i!=actors.end(); ++i)
-		(*i)->Process(Q);
-}
-template<typename Layout>
-CompoundChangeProcessor<Layout>::~CompoundChangeProcessor() {
-	for(typename ServerV::iterator i = actors.begin(); i!=actors.end(); ++i)
-		delete *i;
-	actors.clear();
-}
 
 // simple server that just updates the current subgraph based on changes.
-// this must only be done once, that's why individual layout servers can't be responsible.
-template<typename Layout>
-struct UpdateCurrentProcessor : ChangeProcessor<Layout> {
-	UpdateCurrentProcessor(Layout *client,Layout *currentLayout) : ChangeProcessor<Layout>(client,currentLayout) {}
-	void Process(ChangeQueue<Layout> &Q) {
+// this must be done only once, that's why individual layout servers can't be responsible.
+template<typename Graph>
+struct UpdateCurrentProcessor : LinkedChangeProcessor<Graph,Graph> {
+	UpdateCurrentProcessor(Graph*,Graph*) {}
+	void Process(ChangeQueue<Graph> &Q) {
 		Q.UpdateCurrent();
+		NextProcess(Q);
 	}
 };
 

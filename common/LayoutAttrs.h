@@ -231,19 +231,48 @@ struct EdgeLabel {
 };
 typedef std::vector<EdgeLabel> EdgeLabels;
 
-
-// These are the recommended basic attributes for a Dynagraph Layout graph
-// Most are required by the common Dynagraph template libraries
-// Further refactoring could reduce these dependencies
-struct GraphAttrs : Name,StrAttrs,Hit,ModelPointer,Drawn,GraphGeom,Translation,StaticLabels {
+// These are the basic layout description attributes
+struct GraphAttrs : Name,Hit,Drawn,GraphGeom,Translation,StaticLabels {
 	GraphAttrs(Name name) : Name(name) {}
-	GraphAttrs() {}
 };
-struct NodeAttrs : Name,StrAttrs,Hit,ModelPointer,Drawn,NodeGeom,NodeLabels,IfPolyDef {
+struct NodeAttrs : Name,Hit,Drawn,NodeGeom,NodeLabels,IfPolyDef {
 	NodeAttrs(Name name) : Name(name) {}
 };
-struct EdgeAttrs : Name,StrAttrs,Hit,ModelPointer,Drawn,EdgeGeom,EdgeLabels {
+struct EdgeAttrs : Name,Hit,Drawn,EdgeGeom,EdgeLabels {
 	EdgeAttrs(Name name) : Name(name) {}
+};
+
+// This adds the ModelPointer which is needed if the graph will be used directly with an engine
+struct EngineGraphAttrs : GraphAttrs,ModelPointer {
+	EngineGraphAttrs(Name name = Name()) : GraphAttrs(name) {}
+};
+struct EngineNodeAttrs : NodeAttrs,ModelPointer {
+	EngineNodeAttrs(Name name) : NodeAttrs(name) {}
+};
+struct EngineEdgeAttrs : EdgeAttrs,ModelPointer {
+	EngineEdgeAttrs(Name name) : EdgeAttrs(name) {}
+};
+
+// This adds string attributes, which are needed for the incrface ("for humans")
+struct GeneralGraphAttrs : GraphAttrs,StrAttrs {
+	GeneralGraphAttrs(Name name = Name()) : GraphAttrs(name) {}
+};
+struct GeneralNodeAttrs : NodeAttrs,StrAttrs {
+	GeneralNodeAttrs(Name name) : NodeAttrs(name) {}
+};
+struct GeneralEdgeAttrs : EdgeAttrs,StrAttrs {
+	GeneralEdgeAttrs(Name name) : EdgeAttrs(name) {}
+};
+
+// This combines all of the above so that the graph can be used for both incrface and with engines
+struct EverythingGraphAttrs : GraphAttrs,ModelPointer,StrAttrs {
+	EverythingGraphAttrs(Name name = Name()) : GraphAttrs(name) {}
+};
+struct EverythingNodeAttrs : NodeAttrs,ModelPointer,StrAttrs {
+	EverythingNodeAttrs(Name name) : NodeAttrs(name) {}
+};
+struct EverythingEdgeAttrs : EdgeAttrs,ModelPointer,StrAttrs {
+	EverythingEdgeAttrs(Name name) : EdgeAttrs(name) {}
 };
 
 struct LayoutUpdates : StrAttrChanges,Update {};

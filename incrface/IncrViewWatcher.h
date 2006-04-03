@@ -23,11 +23,8 @@ namespace Dynagraph {
 
 template<typename Graph>
 struct IncrViewWatcher {
-	virtual void IncrHappened(ChangeQueue<Graph> &Q) = 0;
 	virtual void IncrOpen(ChangeQueue<Graph> &Q) = 0;
 	virtual void IncrClose(ChangeQueue<Graph> &Q) = 0;
-	virtual void IncrNewNode(ChangeQueue<Graph> &Q,typename Graph::Node *n) = 0;
-	virtual void IncrNewEdge(ChangeQueue<Graph> &Q,typename Graph::Edge *e) = 0;
 	// do these belong here?  all i know is the implementation does not belong e.g. in IncrStrGraphHandler
 	// and it neatly encapsulates all output in main's TextViewWatcher
 	virtual void FulfilGraph(Graph *g) = 0;

@@ -24,6 +24,7 @@
 #include "incrface/incrparse.h"
 #include "TestTraversals.h"
 
+#include "incrface/IncrStrGraphHandler.h"
 #include "common/NamedToNamedChangeTranslator.h"
 #include "common/StringLayoutTranslationActions.h"
 
@@ -58,22 +59,22 @@ void doOutdot(Layout *l) {
 }
 
 template<typename Graph>
-struct TextViewWatcher : IncrViewWatcher<Graph> {
-	void IncrHappened(ChangeQueue<Graph> &Q) {
-		emitChanges(cout,Q,gd<Name>(Q.client).c_str());
+struct TextViewWatcher : ChangeProcessor<Graph>,IncrViewWatcher<Graph> {
+	// ChangeProcessor
+	void Process(ChangeQueue<Graph> &Q) {
+		emitChanges(cout,Q,gd<Name>(Q.whole).c_str());
 		Q.Okay(true);
 		ModifyFlags(Q) = 0;
 		doOutdot(Q.current);
 	}
+	// IncrViewWatcher
 	void IncrOpen(ChangeQueue<Graph> &Q) {
-		cout << "open graph " << gd<Name>(Q.client) << " " << gd<StrAttrs>(Q.client) << endl;
+		cout << "open graph " << gd<Name>(Q.whole) << " " << gd<StrAttrs>(Q.whole) << endl;
 		igd<StrAttrChanges>(Q.ModGraph()).clear();
 	}
 	void IncrClose(ChangeQueue<Graph> &Q) {
-		cout << "close graph " << gd<Name>(Q.client) << endl;
+		cout << "close graph " << gd<Name>(Q.whole) << endl;
 	}
-	void IncrNewNode(ChangeQueue<Graph> &Q,typename Graph::Node *n) {}
-	void IncrNewEdge(ChangeQueue<Graph> &Q,typename Graph::Edge *e) {}
 	void FulfilGraph(Graph *g) {
 		cout << "fulfil graph " << gd<Name>(g) << endl;
 		emitGraph(cout,g);
@@ -87,9 +88,14 @@ struct TextViewWatcher : IncrViewWatcher<Graph> {
 };
 template<typename Layout>
 IncrLangEvents *createHandler(DString name,DString setEngs) {
-	IncrStrGraphHandler *handler = new IncrStrGraphHandler<StrChGraph>;
-	TextViewWatcher<StrChGraph> *watcher = new TextViewWatcher<StrChGraph>;
+	IncrWorld<GeneralLayout> *world = new IncrWorld<GeneralLayout>;
+	IncrStrGraphHandler<GeneralLayout> *handler = new IncrStrGraphHandler<GeneralLayout>(world);
+	TextViewWatcher<GeneralLayout> *watcher = new TextViewWatcher<GeneralLayout>;
 	handler->watcher_ = watcher;
+	UpdateCurrentProcessor<GeneralLayout> *updater = new UpdateCurrentProcessor<GeneralLayout>(&world->whole_,&world->current_);
+	updater->next_ = watcher;
+	handler->next_ = updater;
+	/*
 	NamedToNamedChangeTranslator<StrChGraph,Layout,StringToLayoutTranslationActions<StrChGraph,Layout> > *xlateIn = 
 		new NamedToNamedChangeTranslator<StrChGraph,Layout,StringToLayoutTranslationActions<StrChGraph,Layout> >
 			(StringToLayoutTranslationActions<StrChGraph,Layout>(g_transform));
@@ -97,12 +103,14 @@ IncrLangEvents *createHandler(DString name,DString setEngs) {
 		new NamedToNamedChangeTranslator<Layout,StrChGraph,LayoutToStringTranslationActions<Layout,StrChGraph> >
 			(LayoutToStringTranslationActions<Layout,StrChGraph>(g_transform));
 
-	ChangeSubProcessor<StrChGraph,Layout> *subproc = new ChangeSubProcessor<StrChGraph,Layout>(&handler->world_,&handler->current_,
+	ChangeSubProcessor<StrChGraph,Layout> *subproc = new ChangeSubProcessor<StrChGraph,Layout>(&handler->whole_,&handler->current_,
 		xlateIn,
 	handler->next_
 	ret = view;
 	if(setEngs)
 		SetAndMark(view->Q.ModGraph(),"engines",setEngs);
+		*/
+	return handler;
 }
 struct IncrCalledBack : IncrCallbacks {
     IncrCalledBack() {
@@ -133,6 +141,7 @@ struct IncrCalledBack : IncrCallbacks {
 		IncrLangEvents *ret;
 		if(type=="dynadag") 
 			ret = createHandler<DynaDAGLayout>(name,setEngs);
+		/*
 			//DynaView<DynaDAGLayout> *view = new DynaView<DynaDAGLayout>(name,g_transform,g_useDotDefaults);
 		}
 		else if(type=="fdp") {
@@ -143,6 +152,7 @@ struct IncrCalledBack : IncrCallbacks {
 			if(setEngs)
 				SetAndMark(view->Q.ModGraph(),"engines",setEngs);
 		}
+		*/
     	return ret;
 	}
     void incr_cb_destroy_handler(IncrLangEvents *h) {
@@ -463,7 +473,7 @@ int main(int argc, char *args[]) {
 			forceRelayout?"batch":"incremental");
 		DynaDAGLayout layout,
 			current(&layout);
-		ChangeProcessor<DynaDAGLayout> &eng = *createLayoutServer<DynaDAGLayout>(&layout,&current);
+		ChangeProcessor<DynaDAGLayout> &eng = *createEngine<DynaDAGLayout>(gd<StrAttrs>(&layout)["engines"],&layout,&current);
 		timer.Now(r_progress,"created engine.\n");
 		DDChangeQueue Q(&layout,&current);
 		if(dotfile) {

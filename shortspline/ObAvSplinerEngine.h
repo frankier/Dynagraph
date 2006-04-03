@@ -25,18 +25,19 @@
 namespace Dynagraph {
 
 template<typename Layout>
-struct ObAvSplinerEngine : ChangeProcessor<Layout> {
-	ObAvSplinerEngine(Layout *client,Layout *current) : ChangeProcessor<Layout>(client,current) {}
+struct ObAvSplinerEngine : LinkedChangeProcessor<Layout,Layout> {
+	Layout *current_;
+	ObAvSplinerEngine(Layout *whole,Layout *current) : current_(current) {}
 	// ChangeProcessor
 	void Process(ChangeQueue<Layout> &changeQ) {
 		if(CalculateBounds(changeQ.current))
 			ModifyFlags(changeQ) |= Update(DG_UPD_BOUNDS);
 		double		SEP = gd<GraphGeom>(changeQ.current).separation.Len();
 
-		ObstacleAvoiderSpliner<Layout> obav(ChangeProcessor<Layout>::current);
+		ObstacleAvoiderSpliner<Layout> obav(current_);
 
 		/* route edges  */
-		for(typename Layout::graphedge_iter ei = this->current->edges().begin(); ei!=this->current->edges().end(); ++ei) {
+		for(typename Layout::graphedge_iter ei = current_->edges().begin(); ei!=current_->edges().end(); ++ei) {
 			typename Layout::Edge *e = *ei;
 			NodeGeom &tg = gd<NodeGeom>(e->tail),
 				&hg = gd<NodeGeom>(e->head);
@@ -65,6 +66,7 @@ struct ObAvSplinerEngine : ChangeProcessor<Layout> {
 				hg.pos,eg.headClipped?&hg.region:0);
 			ModifyEdge(changeQ,e,DG_UPD_MOVE);
 		}
+		NextProcess(changeQ);
 	}
 
 };

@@ -15,38 +15,48 @@
 **********************************************************/
 
 
+#include "common/ChangeQueue.h"
+#include "common/ChangeProcessor.h"
 #include "common/diff_strgraph.h"
-#include 
+#include "IncrWorld.h"
+#include "IncrViewWatcher.h"
 
 namespace Dynagraph {
 
 // NGraph is LGraph containing at least StrAttrs2
 template<typename NGraph> 
 struct IncrStrGraphHandler : IncrLangEvents {
-	NGraph world_,current_;
+	IncrWorld<NGraph> *world_;
 	ChangeQueue<NGraph> Q_;
+	IncrViewWatcher<NGraph> *watcher_;
 	ChangeProcessor<NGraph> *next_;
     int locks_;
-	IncrViewWatcher<NGraph> *watcher_;
 
-    IncrStrGraphHandler() : world_(),current_(&world_),Q_(&world_,&current_),next_(0),locks_(0),watcher_(0) {}
+    IncrStrGraphHandler(IncrWorld<NGraph> *world) : world_(world),Q_(&world_->whole_,&world_->current_),watcher_(0),next_(0) {}
+	~IncrStrGraphHandler() {
+		// don't delete watcher because it's probably in engine chain
+		if(world_)
+			delete world_;
+		if(next_)
+			delete next_;
+	}
 
     bool maybe_go();
 
 	typename NGraph::Node *fetch_node(DString name,bool create) {
-		typename NGraph::Node *n = world_.fetch_node(name,create).first;
+		typename NGraph::Node *n = world_->whole_.fetch_node(name,create).first;
 		if(!n)
 			throw DGNodeDoesNotExist(name);
 		return n;
 	}
 	typename NGraph::Edge *fetch_edge(DString tailname,DString headname,DString edgename,bool create) {
-		typename NGraph::Edge *e = world_.fetch_edge(tailname,headname,edgename,create).first;
+		typename NGraph::Edge *e = world_->whole_.fetch_edge(tailname,headname,edgename,create).first;
 		if(!e)
 			throw DGEdgeDoesNotExist(edgename);
 		return e;
 	}
-	typename NGraph::Edge *fetch_edge(DString edgename,bool create) {
-		typename NGraph::Edge *e = world_.fetch_edge(edgename);
+	typename NGraph::Edge *fetch_edge(DString edgename) {
+		typename NGraph::Edge *e = world_->whole_.fetch_edge(edgename);
 		if(!e)
 			throw DGEdgeDoesNotExist(edgename);
 		return e;
@@ -74,18 +84,16 @@ struct IncrStrGraphHandler : IncrLangEvents {
 // make changes immediately but only Process them when unlocked
 template<typename NGraph>
 bool IncrStrGraphHandler<NGraph>::maybe_go() {
-    if(locks>0)
+    if(locks_>0)
         return false;
 	if(next_)
 		next_->Process(Q_);
-	if(watcher_)
-		watcher_->IncrHappened(Q_);
     return true;
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_open_graph(DString graph,const StrAttrs &attrs) {
-    gd<Name>(&world_) = graph;
-    gd<StrAttrs>(&world_) = attrs;
+    gd<Name>(&world_->whole_) = graph;
+    gd<StrAttrs>(&world_->whole_) = attrs;
     if(watcher_)
 		watcher_->IncrOpen(Q_);
 }
@@ -101,24 +109,22 @@ void IncrStrGraphHandler<NGraph>::incr_ev_mod_graph(const StrAttrs &attrs) {
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_lock() {
-    locks++;
+    locks_++;
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_unlock() {
-    --locks;
+    --locks_;
     maybe_go();
 }
 template<typename NGraph>
 DString IncrStrGraphHandler<NGraph>::incr_ev_ins_node(DString name, const StrAttrs &attrs, bool merge) {
     if(name.empty())
         name = randomName('n');
-	if(fetch_node(name,false))
+	if(world_->whole_.fetch_node(name,false).first)
 		throw DGNodeNameUsed(name);
     typename NGraph::Node *n = fetch_node(name,true);
-	typename ChangeQueue<NGraph>::ResultNode result = Q_.InsNode(n);
+	typename ChangeQueue<NGraph>::NodeResult result = Q_.InsNode(n);
 	SetAndMark(result.object,attrs);
-	if(watcher_)
-		watcher_->IncrNewNode(n);
     maybe_go();
     return name;
 }
@@ -126,46 +132,44 @@ template<typename NGraph>
 DString IncrStrGraphHandler<NGraph>::incr_ev_ins_edge(DString name, DString tailname, DString headname, const StrAttrs &attrs) {
     if(name.empty())
         name = randomName('e');
-	if(fetch_edge(name))
+	if(world_->whole_.fetch_edge(name))
 		throw DGEdgeNameUsed(name);
     typename NGraph::Edge *e = fetch_edge(tailname,headname,name,true);
-	typename ChangeQueue<NGraph>::ResultEdge result = Q_.InsEdge(e);
+	typename ChangeQueue<NGraph>::EdgeResult result = Q_.InsEdge(e);
 	SetAndMark(result.object,attrs);
-	if(watcher_)
-		watcher_->IncrNewEdge(e);
     maybe_go();
     return name;
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_mod_node(DString name,const StrAttrs &attrs) {
     typename NGraph::Node *n = fetch_node(name,false);
-	typename ChangeQueue<NGraph>::ResultNode result = Q_.ModNode(n);
+	typename ChangeQueue<NGraph>::NodeResult result = Q_.ModNode(n);
 	SetAndMark(result.object,attrs);
     maybe_go();
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_mod_edge(DString name,const StrAttrs &attrs) {
     typename NGraph::Edge *e = fetch_edge(name);
-	typename ChangeQueue<NGraph>::ResultEdge result = Q_.ModEdge(e);
+	typename ChangeQueue<NGraph>::EdgeResult result = Q_.ModEdge(e);
 	SetAndMark(result.object,attrs);
     maybe_go();
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_del_node(DString name) {
     typename NGraph::Node *n = fetch_node(name,false);
-	Q.DelNode(n);
+	Q_.DelNode(n);
     maybe_go();
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_del_edge(DString name) {
     typename NGraph::Edge *e = fetch_edge(name);
-	Q.DelEdge(e);
+	Q_.DelEdge(e);
     maybe_go();
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_req_graph() {
 	if(watcher_)
-		watcher_->FulfilGraph();
+		watcher_->FulfilGraph(&world_->whole_);
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_req_node(DString name) {
@@ -207,7 +211,7 @@ void IncrStrGraphHandler<NGraph>::incr_ev_load_strgraph(StrGraph *sg,bool merge,
     assert(merge && del);
     we_do_what_we_are_told<NGraph> react(this);
     incr_ev_lock();
-    diff_strgraph(g,sg,react);
+    diff_strgraph(&world_->current_,sg,react);
     incr_ev_unlock();
 }
 

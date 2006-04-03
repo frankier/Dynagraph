@@ -14,14 +14,17 @@
 *                   http://dynagraph.org                  *
 **********************************************************/
 
+#include "IncrStrGraphHandler.h"
+#include "common/randomName.h"
+
 namespace Dynagraph {
 
 template<typename Layout>
 struct LabelToNameTranslator : DinoInternalChanges {
     DinoInternalChanges *m_chain;
 	DinoMachine::Edge *m_dinoe;
-	DynaView<Layout> *m_source;
-	StrGraph *m_dest;
+	IncrStrGraphHandler<Layout> *m_source;
+	StrChGraph *m_dest;
     bool m_useNodeLabels,m_useEdgeLabels;
     LabelToNameTranslator(DinoInternalChanges *chain,DinoMachine::Edge *de,bool useNodeLabels,bool useEdgeLabels)
             : m_chain(chain),m_dinoe(de),m_useNodeLabels(useNodeLabels),m_useEdgeLabels(useEdgeLabels) {
@@ -29,8 +32,8 @@ struct LabelToNameTranslator : DinoInternalChanges {
 			*h = de->head;
 		assert(gd<DinoMachNode>(t).handler->dinotype()=="layout");
 		assert(gd<DinoMachNode>(h).handler->dinotype()=="abstract");
-		m_source = static_cast<DynaView<Layout>*>(gd<DinoMachNode>(t).handler);
-		m_dest = static_cast<AbsGraphHandler<StrGraph>*>(gd<DinoMachNode>(h).handler)->g;
+		m_source = static_cast<IncrStrGraphHandler<Layout>*>(gd<DinoMachNode>(t).handler);
+		m_dest = &static_cast<IncrStrGraphHandler<StrChGraph>*>(gd<DinoMachNode>(h).handler)->world_->whole_;
 	}
     ~LabelToNameTranslator() {
         if(m_chain)
@@ -54,7 +57,7 @@ struct LabelToNameTranslator : DinoInternalChanges {
             if(ii->second.empty())
                 continue;
 			if(ii->first.isEdge) {
-				if(!m_source->getNode(ii->first.name,false).first) { // deleted edge
+				if(!m_source->world_->whole_.fetch_node(ii->first.name,false).first) { // deleted edge
 					NEID_map::tset &s = ii->second;
 					assert(s.size()==1);
 					DString bname = s.begin()->name;
@@ -69,7 +72,7 @@ struct LabelToNameTranslator : DinoInternalChanges {
             if(ii->second.empty())
                 continue;
 			if(!ii->first.isEdge) {
-				if(!m_source->getNode(ii->first.name,false).first) { // deleted node
+				if(!m_source->world_->whole_.fetch_node(ii->first.name,false).first) { // deleted node
 					NEID_map::tset &s = ii->second;
 					assert(s.size()==1);
 					DString bname = s.begin()->name;
@@ -79,7 +82,7 @@ struct LabelToNameTranslator : DinoInternalChanges {
 				}
 			}
         }
-		for(typename Layout::node_iter ni = m_source->current.nodes().begin(); ni!=m_source->current.nodes().end(); ++ni) {
+		for(typename Layout::node_iter ni = m_source->world_->current_.nodes().begin(); ni!=m_source->world_->current_.nodes().end(); ++ni) {
 			Name nname = gd<Name>(*ni);
 			NEID_map::tset &s = dme.tailmap()[NEID(false,nname)];
 			DString label;
@@ -127,7 +130,7 @@ struct LabelToNameTranslator : DinoInternalChanges {
             }
 			assert(s.size()==1);
 		}
-		for(typename Layout::graphedge_iter ei = m_source->current.edges().begin(); ei!=m_source->current.edges().end(); ++ei) {
+		for(typename Layout::graphedge_iter ei = m_source->world_->current_.edges().begin(); ei!=m_source->world_->current_.edges().end(); ++ei) {
 			Name ename = gd<Name>(*ei);
 			NEID_map::tset &s = dme.tailmap()[NEID(true,ename)];
 			DString label;

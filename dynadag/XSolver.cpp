@@ -60,7 +60,7 @@ void XSolver::DeleteLRConstraint(DDModel::Node *u,DDModel::Node *v) {
 void XSolver::fixSeparation(DDModel::Node *mn) {
 	DDModel::Node *left, *right;	/* mn's left and right neighbors */
 	double left_width, right_width,
-		sep = gd<GraphGeom>(config.client).separation.x,
+		sep = gd<GraphGeom>(config.whole).separation.x,
 		left_ext = config.LeftExtent(mn),
 		right_ext = config.RightExtent(mn);
 	DDCGraph::Node *var = cg.GetVar(DDd(mn).getXcon()),
@@ -121,7 +121,7 @@ void XSolver::doEdgesep(DynaDAGLayout *subLayout) {
 				DDCGraph::Node *uvar = DDd(u).getXcon().n,
 					*vvar = DDd(v).getXcon().n;
 				DDCGraph::Edge *ce = cg.create_edge(uvar,vvar).first;
-				double sep = config.RightExtent(u) + config.LeftExtent(v) + 3.0 * gd<GraphGeom>(config.client).separation.x;
+				double sep = config.RightExtent(u) + config.LeftExtent(v) + 3.0 * gd<GraphGeom>(config.whole).separation.x;
 				DDNS::NSd(ce).minlen = ROUND(xScale * sep);
 			}
 		}

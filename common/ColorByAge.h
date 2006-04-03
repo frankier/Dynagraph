@@ -22,10 +22,9 @@
 namespace Dynagraph {
 
 template<typename Layout>
-struct ColorByAge : ChangeProcessor<Layout> {
+struct ColorByAge : LinkedChangeProcessor<Layout,Layout> {
+	ColorByAge(Layout*,Layout*) {}
 	void Process(ChangeQueue<Layout> &Q);
-	ColorByAge(Layout *client,Layout *currentLayout) : ChangeProcessor<Layout>(client,currentLayout) {}
-	~ColorByAge() {}
 };
 
 template<typename GO>
@@ -52,6 +51,7 @@ void ColorByAge<Layout>::Process(ChangeQueue<Layout> &Q) {
         rotateColor(colors,*ni);
     for(typename Layout::graphedge_iter ei = Q.current->edges().begin(); ei!=Q.current->edges().end(); ++ei)
         rotateColor(colors,*ei);
+	NextProcess(Q);
 }
 
 } // namespace Dynagraph

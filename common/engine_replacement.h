@@ -23,7 +23,7 @@ inline void pre_engine_replacement(ChangeProcessor *oldEngine,ChangeQueue &Q,Lay
 	// remember the current - will be used in post_engine_replacement
     oldCurrent = *Q.current;
 	// erase old layout
-	ChangeQueue delQ(Q.client,Q.current);
+	ChangeQueue delQ(Q.whole,Q.current);
 	delQ.delN = delQ.delE = *Q.current;
 	oldEngine->Process(delQ);
 	assert(Q.current->empty());
