@@ -29,11 +29,23 @@ struct ChangeProcessor {
 	virtual void Process(ChangeQueue<Graph> &Q) = 0; 
 	virtual ~ChangeProcessor() {}
 };
-template<typename Graph1,typename Graph2>
-struct LinkedChangeProcessor : ChangeProcessor<Graph1> {
-	ChangeProcessor<Graph2> *next_;
-	LinkedChangeProcessor(ChangeProcessor<Graph2> *next=0) : next_(next) {}
+template<typename Graph>
+struct LinkedChangeProcessor : ChangeProcessor<Graph> {
+	LinkedChangeProcessor<Graph> *next_;
+	LinkedChangeProcessor(LinkedChangeProcessor<Graph> *next=0) : next_(next) {}
 	virtual ~LinkedChangeProcessor() {
+		delete next_;
+	}
+	void NextProcess(ChangeQueue<Graph> &Q) {
+		if(next_)
+			next_->Process(Q);
+	}
+};
+template<typename Graph1,typename Graph2>
+struct ChangeTranslator : ChangeProcessor<Graph1> {
+	ChangeProcessor<Graph2> *next_;
+	ChangeTranslator(ChangeProcessor<Graph2> *next=0) : next_(next) {}
+	virtual ~ChangeTranslator() {
 		delete next_;
 	}
 	void NextProcess(ChangeQueue<Graph2> &Q) {
@@ -45,7 +57,7 @@ struct LinkedChangeProcessor : ChangeProcessor<Graph1> {
 // simple server that just updates the current subgraph based on changes.
 // this must be done only once, that's why individual layout servers can't be responsible.
 template<typename Graph>
-struct UpdateCurrentProcessor : LinkedChangeProcessor<Graph,Graph> {
+struct UpdateCurrentProcessor : LinkedChangeProcessor<Graph> {
 	UpdateCurrentProcessor(Graph*,Graph*) {}
 	void Process(ChangeQueue<Graph> &Q) {
 		Q.UpdateCurrent();

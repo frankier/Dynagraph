@@ -20,7 +20,7 @@
 namespace Dynagraph {
 
 template<typename Layout>
-struct LabelPlacer : LinkedChangeProcessor<Layout,Layout> {
+struct LabelPlacer : LinkedChangeProcessor<Layout> {
 	LabelPlacer(Layout*,Layout*) {}
 	void Process(ChangeQueue<Layout> &Q);
 };

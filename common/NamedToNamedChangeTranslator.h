@@ -36,9 +36,9 @@ struct EdgeDoesntExistInconsistency : DGException2 {
 	EdgeDoesntExistInconsistency(DString name) : DGException2("Internal inconsistency: edge doesn't exist",name,true) {}
 };
 template<typename Graph1,typename Graph2,typename ChangeActions>
-struct NamedToNamedChangeTranslator : LinkedChangeProcessor<Graph1,Graph2> {
+struct NamedToNamedChangeTranslator : ChangeTranslator<Graph1,Graph2> {
 	ChangeActions actions_;
-	NamedToNamedChangeTranslator(const ChangeActions &action) : actions_(action) {}
+	NamedToNamedChangeTranslator(const ChangeActions &action = ChangeActions()) : actions_(action) {}
 	virtual void Process(ChangeQueue<Graph1> &Q1) {
 		ChangeQueue<Graph2> Q2;
 		actions_.ModifyGraph(Q1.ModGraph(),Q2.ModGraph());

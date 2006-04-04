@@ -66,28 +66,6 @@ inline std::ostream &operator <<(std::ostream &os,const StrAttrs &attrs) {
 	return os;
 }
 typedef std::set<DString> StrAttrChanges;
-/*
-struct StrAttrs2 : StrAttrs,StrAttrChanges { // sorry, don't know what else to call it
-	bool put(DString name,DString val) {
-		StrAttrs &attrs = *this;
-		StrAttrChanges &cha = *this;
-		if(attrs[name]!=val) {
-			attrs[name] = val;
-			cha.insert(name);
-            return true;
-		}
-        else return false;
-	}
-	StrAttrs getChanges() {
-		StrAttrs ret;
-		StrAttrs &sa = *this;
-		StrAttrChanges &sac = *this;
-		for(StrAttrChanges::iterator ci = sac.begin(); ci!=sac.end();++ci)
-			ret[*ci] = sa[*ci];
-		return ret;
-	}
-};
-*/
 template<typename GO>
 inline bool SetAndMark(GO *go,DString name,DString val) {
 	DString &cur = gd<StrAttrs>(go)[name];

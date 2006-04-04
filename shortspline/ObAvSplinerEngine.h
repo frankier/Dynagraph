@@ -25,7 +25,7 @@
 namespace Dynagraph {
 
 template<typename Layout>
-struct ObAvSplinerEngine : LinkedChangeProcessor<Layout,Layout> {
+struct ObAvSplinerEngine : LinkedChangeProcessor<Layout> {
 	Layout *current_;
 	ObAvSplinerEngine(Layout *whole,Layout *current) : current_(current) {}
 	// ChangeProcessor

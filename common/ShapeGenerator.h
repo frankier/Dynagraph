@@ -22,7 +22,7 @@
 namespace Dynagraph {
 
 template<typename Layout>
-struct ShapeGenerator : LinkedChangeProcessor<Layout,Layout> {
+struct ShapeGenerator : LinkedChangeProcessor<Layout> {
 	ShapeGenerator(Layout*,Layout*) {}
 	void Process(ChangeQueue<Layout> &Q);
 };

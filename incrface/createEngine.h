@@ -24,12 +24,12 @@ namespace Dynagraph {
 
 template<typename Graph>
 struct EngineCreator {
-	typedef LinkedChangeProcessor<Graph,Graph>* (*create_fn)(Graph *cli,Graph *curr);
+	typedef LinkedChangeProcessor<Graph>* (*create_fn)(Graph *cli,Graph *curr);
 };
 template<typename Engine>
 struct EngineCreatorInstance {
 	typedef typename Engine::GraphType Graph;
-	static LinkedChangeProcessor<Graph,Graph>* create(Graph *whole,Graph *current) {
+	static LinkedChangeProcessor<Graph>* create(Graph *whole,Graph *current) {
 		return new Engine(whole,current);
 	}
 };
@@ -54,18 +54,25 @@ struct creators<FDP::FDPLayout> : std::map<DString,EngineCreator<FDP::FDPLayout>
 	creators();
 	static creators the_creators;
 };
+template<typename Graph>
+struct EnginePair : std::pair<LinkedChangeProcessor<Graph>*,LinkedChangeProcessor<Graph>*> {
+	EnginePair() {}
+	EnginePair(LinkedChangeProcessor<Graph> *first,LinkedChangeProcessor<Graph> *second) {
+		this->first = first;
+		this->second = second;
+	}
+};
 
 template<typename Graph>
-ChangeProcessor<Graph> *createEngine(DString engines,Graph *whole,Graph *current,ChangeProcessor<Graph> *after = 0) {
+EnginePair<Graph> createEngine(DString engines,Graph *whole,Graph *current) {
 	if(engines.empty())
 		throw DGException("engine(s) were not specified on call to createLayoutEngine");
 
 	FCRData<Graph> *fcrdata = new FCRData<Graph>(whole);
     FCRBefore<Graph> *fcrbefore = new FCRBefore<Graph>(fcrdata);
     FCRAfter<Graph> *fcrafter = new FCRAfter<Graph>(fcrdata);
-	ChangeProcessor<Graph> *ret;
-	LinkedChangeProcessor<Graph,Graph> *now,*last;
-	ret = last = fcrbefore;
+	LinkedChangeProcessor<Graph> *first,*now,*last;
+	first = last = fcrbefore;
 	last->next_ = now = new UpdateCurrentProcessor<Graph>(whole,current);
 	last = now;
     std::vector<DString> engs;
@@ -79,7 +86,7 @@ ChangeProcessor<Graph> *createEngine(DString engines,Graph *whole,Graph *current
 			for(typename creators<Graph>::iterator ci = the_creators.begin(); ci!=the_creators.end(); ++ci)
 				std::cout << reinterpret_cast<int>(ci->first.c_str()) << " " << ci->first << " -> " << ci->second << std::endl;
 			*/
-			delete ret;
+			delete first;
 			throw DGException2("engine name not known or not appropriate for graph type",*ei);
 		}
 		last->next_ = now = crea(whole,current);
@@ -87,9 +94,8 @@ ChangeProcessor<Graph> *createEngine(DString engines,Graph *whole,Graph *current
 	}
 	last->next_ = now = fcrafter;
 	last = now;
-	last->next_ = after;
 
-	return ret;
+	return EnginePair<Graph>(first,last);
 }
 
 } // namespace Dynagraph

@@ -25,7 +25,7 @@ struct FCRData {
     FCRData(Layout *wholeL) : changeN(wholeL),changeE(wholeL) {}
 };
 template<typename Layout>
-struct FCRBefore : LinkedChangeProcessor<Layout,Layout> {
+struct FCRBefore : LinkedChangeProcessor<Layout> {
     FCRData<Layout> *data;
 	FCRBefore(FCRData<Layout> *data) : data(data) {}
 	void Process(ChangeQueue<Layout> &Q) {
@@ -35,7 +35,7 @@ struct FCRBefore : LinkedChangeProcessor<Layout,Layout> {
 	}
 };
 template<typename Layout>
-struct FCRAfter : LinkedChangeProcessor<Layout,Layout> {
+struct FCRAfter : LinkedChangeProcessor<Layout> {
     FCRData<Layout> *data;
 	FCRAfter(FCRData<Layout> *data) : data(data) {}
     ~FCRAfter() {

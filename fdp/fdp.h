@@ -34,7 +34,7 @@ struct StillHasEdges : DGException {
   StillHasEdges() : DGException("a node was deleted without all of its edges being deleted (impossible!)",true) {}
 };
 
-struct FDPServer : LinkedChangeProcessor<FDPLayout,FDPLayout>,Grid::Visitor {
+struct FDPServer : LinkedChangeProcessor<FDPLayout>,Grid::Visitor {
 	int numIters;
 	bool useComp,
 		useGrid;

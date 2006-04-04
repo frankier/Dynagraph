@@ -940,7 +940,7 @@ struct OptimizerChooser {
 	}
 };
 */
-struct DynaDAGServer : LinkedChangeProcessor<DynaDAGLayout,DynaDAGLayout>,DynaDAGServices {
+struct DynaDAGServer : LinkedChangeProcessor<DynaDAGLayout>,DynaDAGServices {
 	DynaDAGLayout *whole_,*current_;
 	DDModel model; // whole graph + virtual nodes & edges for tall nodes & edge chains
 	Config config;	// indexes layout nodes by rank and order

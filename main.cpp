@@ -30,6 +30,7 @@
 
 #include "incrface/IncrStrGraphHandler.h"
 #include "common/NamedToNamedChangeTranslator.h"
+#include "common/LayoutToLayoutTranslator.h"
 #include "common/InternalTranslator.h"
 #include "common/StringLayoutTranslator.h"
 
@@ -64,7 +65,7 @@ void doOutdot(Layout *l) {
 }
 
 template<typename Graph>
-struct TextViewWatcher : ChangeProcessor<Graph>,IncrViewWatcher<Graph> {
+struct TextViewWatcher : LinkedChangeProcessor<Graph>,IncrViewWatcher<Graph> {
 	// ChangeProcessor
 	void Process(ChangeQueue<Graph> &Q) {
 		emitChanges(cout,Q,gd<Name>(Q.whole).c_str());
@@ -92,38 +93,72 @@ struct TextViewWatcher : ChangeProcessor<Graph>,IncrViewWatcher<Graph> {
 	}
 };
 template<typename Layout>
-IncrLangEvents *createHandler(DString name,DString engines,bool setEngs) {
-	IncrWorld<Layout> *world = new IncrWorld<Layout>;
-	IncrStrGraphHandler<Layout> *handler = new IncrStrGraphHandler<Layout>(world);
-	TextViewWatcher<Layout> *watcher = new TextViewWatcher<Layout>;
-	handler->watcher_ = watcher;
+EnginePair<Layout> stringizeEngine(EnginePair<Layout> engines) {
+	EnginePair<Layout> ret;
 	typedef InternalTranslator2<Layout,StringToLayoutTranslator<Layout,Layout> > StringsInEngine;
 	typedef InternalTranslator2<Layout,LayoutToStringTranslator<Layout,Layout> > StringsOutEngine;
 	StringsInEngine *xlateIn = new StringsInEngine(StringToLayoutTranslator<Layout,Layout>(g_transform,g_useDotDefaults));
 	StringsOutEngine *xlateOut = new StringsOutEngine(g_transform);
-	xlateOut->next_ = watcher;
-	xlateIn->next_ = createEngine(engines,&world->whole_,&world->current_,xlateOut);
-	handler->next_ = xlateIn;
-	if(setEngs) 
-		SetAndMark(handler->Q_.ModGraph(),"engines",engines);
-
-	/*
-	NamedToNamedChangeTranslator<StrChGraph,Layout,StringToLayoutTranslationActions<StrChGraph,Layout> > *xlateIn = 
-		new NamedToNamedChangeTranslator<StrChGraph,Layout,StringToLayoutTranslationActions<StrChGraph,Layout> >
-			(StringToLayoutTranslationActions<StrChGraph,Layout>(g_transform));
-	NamedToNamedChangeTranslator<Layout,StrChGraph,LayoutToStringTranslationActions<Layout,StrChGraph> > *xlateOut = 
-		new NamedToNamedChangeTranslator<Layout,StrChGraph,LayoutToStringTranslationActions<Layout,StrChGraph> >
-			(LayoutToStringTranslationActions<Layout,StrChGraph>(g_transform));
-
-	ChangeSubProcessor<StrChGraph,Layout> *subproc = new ChangeSubProcessor<StrChGraph,Layout>(&handler->whole_,&handler->current_,
-		xlateIn,
-	handler->next_
-	ret = view;
-	if(setEngs)
-		SetAndMark(view->Q.ModGraph(),"engines",setEngs);
-		*/
-	return handler;
+	xlateIn->next_ = engines.first;
+	engines.second->next_ = xlateOut;
+	return EnginePair(xlateIn,xlateOut);
 }
+template<typename Layout1,typename Layout2,typename InTranslator,typename OutTranslator>
+struct WorldInABox : LinkedChangeProcessor<Layout1> {
+	IncrWorld<Layout2> world_;
+	EnginePair<Layout2> innerEngines_;
+	ChangeProcessor<Layout1> *topEngine_;
+	WorldInABox(DString engines) {
+		assignEngine(engines);
+	}
+	void assignEngine(DString engines) {
+		if(innerEngines_.second)
+			innerEngines_.second->next_ = 0;
+		if(topEngine_)
+			delete topEngine_;
+		typedef NamedToNamedChangeTranslator<Layout1,Layout2,InTranslator> XlateIn;
+		typedef NamedToNamedChangeTranslator<Layout2,Layout1,OutTranslator> XlateOut;
+		XlateIn *xlateIn = new XlateIn;
+		XlateOut *xlateOut = new XlateOut;
+		innerEngines_ = createEngine(engines,&world_.whole_,&world_.current_);
+		xlateIn->next_ = innerEngines_.first;
+		innerEngines_.second->next_ = xlateOut;
+		topEngine_ = xlateIn;
+	}
+	void Process(ChangeQueue<Layout1> &Q) {
+		topEngine_->Process(Q);
+		NextProcess(Q);
+	}
+};
+template<typename Layout>
+IncrLangEvents *createHandlers(DString name,DString superengines,DString engines,bool setEngs) {
+	if(superengines) {
+		IncrWorld<GeneralLayout> *world = new IncrWorld<GeneralLayout>;
+		IncrStrGraphHandler<GeneralLayout> *handler = new IncrStrGraphHandler<GeneralLayout>(world);
+		TextViewWatcher<GeneralLayout> *watcher = new TextViewWatcher<GeneralLayout>;
+		handler->watcher_ = watcher;
+		typedef WorldInABox<GeneralLayout,Layout,LayoutToLayoutTranslator<GeneralLayout,Layout>,LayoutToLayoutTranslator<Layout,GeneralLayout> > Box;
+		Box *box = new Box(engines);
+		box->next_ = watcher;
+		handler->next_ = box;
+		if(setEngs) 
+			SetAndMark(handler->Q_.ModGraph(),"engines",engines);
+		return handler;
+	}
+	else {
+		IncrWorld<Layout> *world = new IncrWorld<Layout>;
+		IncrStrGraphHandler<Layout> *handler = new IncrStrGraphHandler<Layout>(world);
+		TextViewWatcher<Layout> *watcher = new TextViewWatcher<Layout>;
+		handler->watcher_ = watcher;
+		EnginePair<Layout> engine = createEngine(engines,&world->whole_,&world->current_);
+		engine.second->next_ = watcher;
+		handler->next_ = engine.first;
+		if(setEngs) 
+			SetAndMark(handler->Q_.ModGraph(),"engines",engines);
+		return handler;
+	}
+}
+
 struct IncrCalledBack : IncrCallbacks {
     IncrCalledBack() {
         g_incrCallback = this;
@@ -138,10 +173,8 @@ struct IncrCalledBack : IncrCallbacks {
 		if(ai!=attrs.end()) 
 			type = ai->second;
 		else {
-			StrAttrs::const_iterator ai = attrs.find("engines");
-			if(ai!=attrs.end())
-				engines = ai->second;
-			else {
+			engines = attrs.look("engines");
+			if(!engines) {
 				engines = "shapegen,dynadag,labels";
 				setEngs = true;
 			}
@@ -154,20 +187,9 @@ struct IncrCalledBack : IncrCallbacks {
 		}
 		IncrLangEvents *ret;
 		if(type=="dynadag") 
-			ret = createHandler<DynaDAGLayout>(name,engines,setEngs);
+			ret = createHandlers<DynaDAGLayout>(name,attrs.look("superengines"),engines,setEngs);
 		else if(type=="fdp")
-			ret = createHandler<FDPLayout>(name,engines,setEngs);
-		/*
-			//DynaView<DynaDAGLayout> *view = new DynaView<DynaDAGLayout>(name,g_transform,g_useDotDefaults);
-		}
-		else if(type=="fdp") {
-			DynaView<FDPLayout> *view = new DynaView<FDPLayout>(name,g_transform,g_useDotDefaults);
-			TextViewWatcher<FDPLayout> *watcher = new TextViewWatcher<FDPLayout>;
-			view->watcher = watcher;
-			ret = view;
-			if(setEngs)
-		}
-		*/
+			ret = createHandlers<FDPLayout>(name,attrs.look("superengines"),engines,setEngs);
     	return ret;
 	}
     void incr_cb_destroy_handler(IncrLangEvents *h) {
@@ -488,7 +510,7 @@ int main(int argc, char *args[]) {
 			forceRelayout?"batch":"incremental");
 		DynaDAGLayout layout,
 			current(&layout);
-		ChangeProcessor<DynaDAGLayout> &eng = *createEngine<DynaDAGLayout>(gd<StrAttrs>(&layout)["engines"],&layout,&current);
+		ChangeProcessor<DynaDAGLayout> &eng = *createEngine<DynaDAGLayout>(gd<StrAttrs>(&layout)["engines"],&layout,&current).first;
 		timer.Now(r_progress,"created engine.\n");
 		DDChangeQueue Q(&layout,&current);
 		if(dotfile) {

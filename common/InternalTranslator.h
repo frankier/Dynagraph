@@ -21,7 +21,7 @@
 
 namespace Dynagraph {
 template<typename Graph,typename ChangeActions>
-struct InternalTranslator : LinkedChangeProcessor<Graph,Graph> {
+struct InternalTranslator : LinkedChangeProcessor<Graph> {
 	ChangeActions actions_;
 	InternalTranslator(const ChangeActions &action) : actions_(action) {}
 	virtual void Process(ChangeQueue<Graph> &Q) {
@@ -42,7 +42,7 @@ struct InternalTranslator : LinkedChangeProcessor<Graph,Graph> {
 	}
 };
 template<typename Graph,typename ChangeActions>
-struct InternalTranslator2 : LinkedChangeProcessor<Graph,Graph> {
+struct InternalTranslator2 : LinkedChangeProcessor<Graph> {
 	ChangeActions actions_;
 	InternalTranslator2(const ChangeActions &action) : actions_(action) {}
 	virtual void Process(ChangeQueue<Graph> &Q) {

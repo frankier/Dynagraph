@@ -22,7 +22,7 @@
 namespace Dynagraph {
 
 template<typename Layout>
-struct ColorByAge : LinkedChangeProcessor<Layout,Layout> {
+struct ColorByAge : LinkedChangeProcessor<Layout> {
 	ColorByAge(Layout*,Layout*) {}
 	void Process(ChangeQueue<Layout> &Q);
 };

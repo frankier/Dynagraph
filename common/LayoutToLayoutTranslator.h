@@ -21,8 +21,6 @@ namespace Dynagraph {
 
 template<typename Layout1,typename Layout2>
 struct LayoutToLayoutTranslator {
-	Transform *transform_;
-	LayoutToLayoutTranslator(Transform *transform) : transform_(transform) {}
 	void ModifyGraph(Layout1 *l1,Layout2 *l2) {
 		gd<GraphAttrs>(l2) = gd<GraphAttrs>(l1);
 		igd<Update>(l2) = igd<Update>(l1);
