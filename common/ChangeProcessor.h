@@ -42,9 +42,11 @@ struct LinkedChangeProcessor : ChangeProcessor<Graph> {
 	}
 };
 template<typename Graph1,typename Graph2>
-struct ChangeTranslator : ChangeProcessor<Graph1> {
+struct ChangeTranslator : LinkedChangeProcessor<Graph1> {
+	// oddity: intentional override of field because linked-list one must stay null
 	ChangeProcessor<Graph2> *next_;
-	ChangeTranslator(ChangeProcessor<Graph2> *next=0) : next_(next) {}
+	ChangeQueue<Graph2> *nextQ_;
+	ChangeTranslator(ChangeProcessor<Graph2> *next=0,ChangeQueue<Graph2> *nextQ=0) : next_(next),nextQ_(nextQ) {}
 	virtual ~ChangeTranslator() {
 		delete next_;
 	}

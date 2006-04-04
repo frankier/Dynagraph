@@ -105,27 +105,25 @@ EnginePair<Layout> stringizeEngine(EnginePair<Layout> engines) {
 }
 template<typename Layout1,typename Layout2,typename InTranslator,typename OutTranslator>
 struct WorldInABox : LinkedChangeProcessor<Layout1> {
+	typedef NamedToNamedChangeTranslator<Layout1,Layout2,InTranslator> XlateIn;
+	typedef NamedToNamedChangeTranslator<Layout2,Layout1,OutTranslator> XlateOut;
 	IncrWorld<Layout2> world_;
 	EnginePair<Layout2> innerEngines_;
 	ChangeProcessor<Layout1> *topEngine_;
-	WorldInABox(DString engines) {
-		assignEngine(engines);
-	}
-	void assignEngine(DString engines) {
+	XlateOut *xlateOut_;
+	WorldInABox() : topEngine_(0),xlateOut_(0) {}
+	void assignEngine(DString engines,IncrWorld<Layout1> &topWorld) {
 		if(innerEngines_.second)
 			innerEngines_.second->next_ = 0;
-		if(topEngine_)
-			delete topEngine_;
-		typedef NamedToNamedChangeTranslator<Layout1,Layout2,InTranslator> XlateIn;
-		typedef NamedToNamedChangeTranslator<Layout2,Layout1,OutTranslator> XlateOut;
-		XlateIn *xlateIn = new XlateIn;
-		XlateOut *xlateOut = new XlateOut;
+		XlateIn *xlateIn = new XlateIn(&world_.whole_,&world_.current_);
+		xlateOut_ = new XlateOut(&topWorld.whole_,&topWorld.current_);
 		innerEngines_ = createEngine(engines,&world_.whole_,&world_.current_);
 		xlateIn->next_ = innerEngines_.first;
-		innerEngines_.second->next_ = xlateOut;
+		innerEngines_.second->next_ = xlateOut_;
 		topEngine_ = xlateIn;
 	}
 	void Process(ChangeQueue<Layout1> &Q) {
+		xlateOut_->nextQ_ = &Q;
 		topEngine_->Process(Q);
 		NextProcess(Q);
 	}
@@ -138,7 +136,8 @@ IncrLangEvents *createHandlers(DString name,DString superengines,DString engines
 		TextViewWatcher<GeneralLayout> *watcher = new TextViewWatcher<GeneralLayout>;
 		handler->watcher_ = watcher;
 		typedef WorldInABox<GeneralLayout,Layout,LayoutToLayoutTranslator<GeneralLayout,Layout>,LayoutToLayoutTranslator<Layout,GeneralLayout> > Box;
-		Box *box = new Box(engines);
+		Box *box = new Box;
+		box->assignEngine(engines,*world);
 		box->next_ = watcher;
 		handler->next_ = box;
 		if(setEngs) 

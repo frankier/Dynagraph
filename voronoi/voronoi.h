@@ -28,7 +28,7 @@ namespace Voronoi {
 
 // this could actually be templated on FDP::FDPLayout, which would turn all of voronoi
 // into a template library.  i'm trying to focus on more useful things at the moment.
-struct VoronoiServer : LinkedChangeProcessor<FDP::FDPLayout,FDP::FDPLayout> {
+struct VoronoiServer : LinkedChangeProcessor<FDP::FDPLayout> {
 	double margin;     /* Create initial bounding box by adding
                         * margin * dimension around box enclosing
                         * nodes.
