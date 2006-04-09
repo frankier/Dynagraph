@@ -190,12 +190,12 @@ typename ChangeQueue<Graph>::NodeResult ChangeQueue<Graph>::DelNode(typename Gra
 	else {
 		modN.erase(n);
 		// remove edges that are currently inserted
-		typename Graph::Node *cn = current->find(n); 
-		for(typename Graph::nodeedge_iter i = cn->alledges().begin(); i!=cn->alledges().end();) {
-			typename Graph::Edge *ce = *i++;
-			if(!delE.find(ce))
-				DelEdge(ce);
-		}
+		if(typename Graph::Node *cn = current->find(n))
+			for(typename Graph::nodeedge_iter i = cn->alledges().begin(); i!=cn->alledges().end();) {
+				typename Graph::Edge *ce = *i++;
+				if(!delE.find(ce))
+					DelEdge(ce);
+			}
 		// and edges that haven't yet been inserted
 		if(typename Graph::Node *in = insE.find(n))
 			for(typename Graph::nodeedge_iter i = in->alledges().begin(); i!=in->alledges().end();) {
