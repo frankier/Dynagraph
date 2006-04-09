@@ -106,7 +106,7 @@ inline std::ostream &operator << (std::ostream &os,const Changes<GO> &cgo) {
 	os << "[";
 	for(StrAttrChanges::const_iterator ci = cha.begin(); ci!=cha.end(); ++ci) {
 	  if(ci!=cha.begin())
-	    os << ",";
+	    os << ", ";
 	  os << mquote(*ci) << "=" << mquote(att[*ci]);
 	}
 	os << "]";
@@ -116,14 +116,17 @@ struct NamedAttrs : StrAttrs,Name,Hit {
 	NamedAttrs(DString name = DString()) : Name(name) {}
 	NamedAttrs(const StrAttrs &at,DString name=DString()) : StrAttrs(at),Name(name) {}
 };
+// as we all should know by now, deriving a class and trying to override all its 
+// methods in order to maintain a dictionary isn't all that good an idea.  
+// in case it is not working, we have oopsRefreshDictionary() -- blecch!
+// better would be LGraph support for multiple simultaneous lookup, as BGL has.
 template<class ADTPolicy,class GData,class NData,class EData,class GIData=Nothing,class NIData=Nothing,class EIData=Nothing>
 struct NamedGraph : LGraph<ADTPolicy,GData,NData,EData,GIData,NIData,EIData> {
     typedef LGraph<ADTPolicy,GData,NData,EData,GIData,NIData,EIData> Graph;
-	// as we all should know by now, deriving a class and adding a dictionary isn't all
-	// that good an idea.  this class is no exception; to make this work, gotta call
-	// oopsRefreshDictionary() before you need the ndict to work.  what's next?  LGraph events?
-    typedef std::map<DString,typename Graph::Node*> NDict;
-	typedef std::map<DString,typename Graph::Edge*> EDict;
+	typedef typename Graph::Node Node;
+	typedef typename Graph::Edge Edge;
+    typedef std::map<DString,Node*> NDict;
+	typedef std::map<DString,Edge*> EDict;
 	NDict ndict;
 	EDict edict;
 	NamedGraph(NamedGraph *parent = 0) : Graph(parent) {}
@@ -133,42 +136,64 @@ struct NamedGraph : LGraph<ADTPolicy,GData,NData,EData,GIData,NIData,EIData> {
 	NamedGraph(const Graph &g) : Graph(g) {
 		oopsRefreshDictionary();
 	}
-    typename Graph::Node *create_node(DString name) {
+	// LGraph overrides
+    Node *create_node(DString name) { // non virtual
 		return create_node(NData(name));
 	}
-	typename Graph::Node *create_node(const NData &nd) {
-		typename Graph::Node *ret = Graph::create_node(nd);
+	Node *create_node(const NData &nd) {
+		Node *ret = Graph::create_node(nd);
 		enter(nd,ret);
 		return ret;
 	}
-	std::pair<typename Graph::Node *,bool> fetch_node(DString name,bool create) {
-		if(typename Graph::Node *n = ndict[name])
-			return make_pair(n,false);
-		if(!create)
-			return make_pair((typename Graph::Node*)0,false);
-		return make_pair(create_node(name),true);
-	}
-	std::pair<typename Graph::Edge *,bool> create_edge(typename Graph::Node *tail,typename Graph::Node *head,DString name) {
+	std::pair<Edge *,bool> create_edge(Node *tail,Node *head,DString name) {// non virtual
         EData ed(name);
 		return create_edge(tail,head,ed);
 	}
-	std::pair<typename Graph::Edge *,bool> create_edge(typename Graph::Node *tail,typename Graph::Node *head,EData &ed) {
-		std::pair<typename Graph::Edge *,bool> ret = Graph::create_edge(tail,head,ed);
+	std::pair<Edge *,bool> create_edge(Node *tail,Node *head,EData &ed) {
+		std::pair<Edge *,bool> ret = Graph::create_edge(tail,head,ed);
 		if(!ret.second)
 			throw DGParallelEdgesNotSupported(ed);
 		else
 			enter(ed,ret.first);
 		return ret;
 	}
-	std::pair<typename Graph::Edge *,bool> fetch_edge(DString tail, DString head, DString name,bool create) {
-		if(typename Graph::Edge *e = edict[name]) {
+	std::pair<Node *,bool> insert_subnode(Node *n) {
+		std::pair<Node *,bool> ret = Graph::insert_subnode(n);
+		if(ret.second)
+			enter(gd<Name>(n),ret.first);
+		return ret;
+	}
+	std::pair<Edge *,bool> insert_subedge(Edge *e) {
+		std::pair<Edge *,bool> ret = Graph::insert_subedge(e);
+		if(ret.second)
+			enter(gd<Name>(e),ret.first);
+		return ret;
+	}
+	bool erase_node(Node *n) {
+		forget(n);
+        return Graph::erase_node(n);
+	}
+    bool erase_edge(Edge *e) {
+		forget(e);
+        return Graph::erase_edge(e);
+    }
+	// not in LGraph
+	std::pair<Node *,bool> fetch_node(DString name,bool create) {
+		if(Node *n = ndict[name])
+			return make_pair(n,false);
+		if(!create)
+			return make_pair((Node*)0,false);
+		return make_pair(create_node(name),true);
+	}
+	std::pair<Edge *,bool> fetch_edge(DString tail, DString head, DString name,bool create) {
+		if(Edge *e = edict[name]) {
 			if(gd<Name>(e->tail)!=tail || gd<Name>(e->head)!=head)
 				throw DGEdgeNameUsed(name);
 			return make_pair(e,false);
 		}
 		if(!create)
-			return make_pair((typename Graph::Edge*)0,false);
-		typename Graph::Node *t = fetch_node(tail,false).first,
+			return make_pair((Edge*)0,false);
+		Node *t = fetch_node(tail,false).first,
 			*h = fetch_node(head,false).first;
 		if(!t)
 			throw DGEdgeTailDoesNotExist(tail);
@@ -176,44 +201,32 @@ struct NamedGraph : LGraph<ADTPolicy,GData,NData,EData,GIData,NIData,EIData> {
 			throw DGEdgeHeadDoesNotExist(head);
         return create_edge(t,h,name);
 	}
-	std::pair<typename Graph::Edge *,bool> fetch_edge(typename Graph::Node *tail,typename Graph::Node *head,DString name,bool create) {
-		if(typename Graph::Edge *e = edict[name]) {
+	std::pair<Edge *,bool> fetch_edge(Node *tail,Node *head,DString name,bool create) {
+		if(Edge *e = edict[name]) {
 			if(e->tail!=tail || e->head!=head)
 				throw DGEdgeNameUsed(name);
 			return make_pair(e,false);
 		}
 		if(!create)
-			return make_pair((typename Graph::Edge*)0,false);
+			return make_pair((Edge*)0,false);
         return create_edge(tail,head,name);
 	}
-	typename Graph::Edge *fetch_edge(DString name) {
+	Edge *fetch_edge(DString name) {
 		return edict[name];
 	}
-	void forget(typename Graph::Node *n) {
+	void forget(Node *n) {
 		ndict.erase(gd<Name>(n));
 	}
-	void forget(typename Graph::Edge *e) {
+	void forget(Edge *e) {
 		edict.erase(gd<Name>(e));
 	}
-    void rename(typename Graph::Node *n,DString name) {
+    void rename(Node *n,DString name) {
 		forget(n);
-        //ndict[gd<Name>(n)] = 0;
         ndict[gd<Name>(n) = name] = n;
     }
-    void rename(typename Graph::Edge *e,DString name) {
+    void rename(Edge *e,DString name) {
 		forget(e);
-        //edict[gd<Name>(e)] = 0;
         edict[gd<Name>(e) = name] = e;
-    }
-    bool erase(typename Graph::Node *n) {
-		forget(n);
-        //ndict[gd<Name>(n)] = 0;
-        return Graph::erase(n);
-    }
-    bool erase(typename Graph::Edge *e) {
-		forget(e);
-        //edict[gd<Name>(e)] = 0;
-        return Graph::erase(e);
     }
 	void oopsRefreshDictionary() {
 		ndict.clear();
@@ -221,36 +234,36 @@ struct NamedGraph : LGraph<ADTPolicy,GData,NData,EData,GIData,NIData,EIData> {
 			ndict[gd<Name>(*ni)] = *ni;
 	}
 	void readSubgraph(NamedGraph *what) {
-		std::map<DString,typename Graph::Node*> &pardict = static_cast<NamedGraph*>(Graph::parent)->ndict;
+		std::map<DString,Node*> &pardict = static_cast<NamedGraph*>(Graph::parent)->ndict;
 		for(typename Graph::node_iter ni = what->nodes().begin(); ni!=what->nodes().end(); ++ni) {
-			typename Graph::Node *n = *ni,*found = pardict[gd<Name>(n)];
+			Node *n = *ni,*found = pardict[gd<Name>(n)];
 			if(!found)
 				throw DGNodeDoesNotExist(gd<Name>(n));
 			insert(found);
 		}
 		for(typename Graph::graphedge_iter ei = what->edges().begin(); ei!=what->edges().end(); ++ei) {
-			typename Graph::Edge *e = *ei;
-			typename Graph::Node *tail = pardict[gd<Name>(e->tail)],
+			Edge *e = *ei;
+			Node *tail = pardict[gd<Name>(e->tail)],
 				*head = pardict[gd<Name>(e->head)];
-			typename Graph::Edge *found = Graph::parent->find_edge(tail,head);
+			Edge *found = Graph::parent->find_edge(tail,head);
 			if(!found)
 				throw DGEdgeDoesNotExist(gd<Name>(e->tail),gd<Name>(e->head));
 			insert(found);
 		}
 	}
 protected:
-	void enter(const DString &name,typename Graph::Node *n) {
+	void enter(const DString &name,Node *n) {
 		if(name.empty())
 			return;
-		typename Graph::Node *&spot = ndict[name];
+		Node *&spot = ndict[name];
 		if(spot)
 			throw DGNodeNameUsed(name);
 		spot = n;
 	}
-	void enter(const DString &name,typename Graph::Edge *e) {
+	void enter(const DString &name,Edge *e) {
 		if(name.empty())
 			return;
-		typename Graph::Edge *&spot = edict[name];
+		Edge *&spot = edict[name];
 		if(spot)
 			throw DGEdgeNameUsed(name);
 		spot = e;

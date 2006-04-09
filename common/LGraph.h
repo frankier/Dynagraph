@@ -467,7 +467,7 @@ public:
 		return pseudo_seq<graphedge_iter>(graphedge_iter(this),graphedge_iter(0));
 	}
 	// methods available only on main graphs
-	Node *create_node(const NodeDatum &d = NodeDatum()) {
+	virtual Node *create_node(const NodeDatum &d = NodeDatum()) {
 		if(parent)
 			return 0;
 		Node *ret = new Node(this,new ND2(d));
@@ -481,7 +481,7 @@ public:
 		nodes().insert(ret);
 		return ret;
 	}
-	std::pair<Edge*,bool> create_edge(Node *tail, Node *head,const EdgeDatum &d = EdgeDatum()) {
+	virtual std::pair<Edge*,bool> create_edge(Node *tail, Node *head,const EdgeDatum &d = EdgeDatum()) {
 		if(parent)
 			return std::make_pair((Edge*)0,false);
 		if(!tail) throw NullPointer();
@@ -506,7 +506,7 @@ public:
 	// methods available only on subgraphs
 	// the shorter, overloaded methods insert,erase,find are intended to
 	// mimic std::set<> operations.  it's a little less explicit what you're doing though.
-	std::pair<Node*,bool> insert_subnode(Node *n) {
+	virtual std::pair<Node*,bool> insert_subnode(Node *n) {
 		if(Node *found = find_nodeimage(n))
 			return std::make_pair(found,false);
 		if(!parent||!parent->insert_subnode(n).first)
@@ -516,7 +516,7 @@ public:
 		nodes().insert(ret);
 		return std::make_pair(ret,true);
 	}
-	std::pair<Edge*,bool> insert_subedge(Edge *e) {
+	virtual std::pair<Edge*,bool> insert_subedge(Edge *e) {
 		if(Edge *found = find_edgeimage(e))
 			return std::make_pair(found,false);
 		if(!parent||!parent->insert_subedge(e).first)
@@ -543,7 +543,7 @@ public:
 	bool empty() {
 		return nodes().empty();
 	}
-	bool erase_node(Node *n) {
+	virtual bool erase_node(Node *n) {
 		if(n->g!=this)
 			if(Node *n2 = find_nodeimage(n))
 				n = n2;
@@ -563,7 +563,7 @@ public:
 		delete n;
 		return true;
 	}
-	bool erase_edge(Edge *e) {
+	virtual bool erase_edge(Edge *e) {
 		if(e->head->g!=this)
 			if(Edge *e2 = find_edgeimage(e))
 				e = e2;

@@ -66,15 +66,15 @@ struct ChangeQueue {
 	void UpdateCurrent();
 
 	// called by client after server processing; clear subgraphs and maybe do deletions
-	void Okay(bool doDelete = false);
+	void Execute(bool doDelete);
 
 	bool Empty() { return insN.empty()&&modN.empty()&&delN.empty()&&
 		insE.empty()&&modE.empty()&&delE.empty()&&unbornN.empty()&&unbornE.empty(); }
 
 	// copy
-	ChangeQueue &operator=(ChangeQueue &Q);
+	ChangeQueue &operator=(const ChangeQueue &Q);
 	// accumulate
-	ChangeQueue &operator+=(ChangeQueue &Q);
+	ChangeQueue &operator+=(const ChangeQueue &Q);
 
 	// Exceptions
 	struct InsertInserted : DGException {
@@ -108,7 +108,7 @@ typename ChangeQueue<Graph>::NodeResult ChangeQueue<Graph>::InsNode(typename Gra
 		result.action = inserted;
 		result.object = insN.insert(n).first;
 	}
-	else if(modN.find(n)||(checkRedundancy&&insN.find(n))||current->find(n))
+	else if(modN.find(n) || checkRedundancy&&(insN.find(n)||current->find(n)))
 		throw InsertInserted();
 	else {
 		result.action = inserted;
@@ -128,7 +128,7 @@ typename ChangeQueue<Graph>::EdgeResult ChangeQueue<Graph>::InsEdge(typename Gra
 		result.action = inserted;
 		result.object = insE.insert(e).first;
 	}
-	else if(modE.find(e)||(checkRedundancy&&insE.find(e))||current->find(e))
+	else if(modE.find(e) || checkRedundancy&&(insE.find(e)||current->find(e)))
 		throw InsertInserted();
 	else {
 		result.action = inserted;
@@ -257,7 +257,7 @@ void ChangeQueue<Graph>::UpdateCurrent() {
 			throw ModifyUninserted(true);
 }
 template<typename Graph>
-void ChangeQueue<Graph>::Okay(bool doDelete) {
+void ChangeQueue<Graph>::Execute(bool doDelete) {
 	insN.clear();
 	insE.clear();
 	modN.clear();
@@ -291,7 +291,7 @@ void ChangeQueue<Graph>::Okay(bool doDelete) {
     assert(Empty());
 }
 template<typename Graph>
-ChangeQueue<Graph> &ChangeQueue<Graph>::operator=(ChangeQueue<Graph> &Q) {
+ChangeQueue<Graph> &ChangeQueue<Graph>::operator=(const ChangeQueue<Graph> &Q) {
 	assert(whole==Q.whole);
 	insN = Q.insN;
 	modN = Q.modN;
@@ -303,7 +303,7 @@ ChangeQueue<Graph> &ChangeQueue<Graph>::operator=(ChangeQueue<Graph> &Q) {
 	return *this;
 }
 template<typename Graph>
-ChangeQueue<Graph> &ChangeQueue<Graph>::operator+=(ChangeQueue<Graph> &Q) {
+ChangeQueue<Graph> &ChangeQueue<Graph>::operator+=(const ChangeQueue<Graph> &Q) {
 	assert(whole==Q.whole);
 	typename Graph::node_iter ni;
 	typename Graph::graphedge_iter ei;

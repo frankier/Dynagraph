@@ -25,6 +25,7 @@
 #include <queue>
 #include <bitset>
 #include <vector>
+#include "common/Useful.h"
 
 namespace Dynagraph {
 

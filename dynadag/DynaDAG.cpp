@@ -411,8 +411,10 @@ void DynaDAGServer::Process(DDChangeQueue &changeQ) {
 	loops.Field(r_dynadag,"edges modified - input",changeQ.modE.edges().size());
 	loops.Field(r_dynadag,"nodes deleted - input",changeQ.delN.nodes().size());
 	loops.Field(r_dynadag,"edges deleted - input",changeQ.delE.nodes().size());
-	if(changeQ.Empty())
+	if(changeQ.Empty()) {
+		NextProcess(changeQ);
 		return;
+	}
 
 	// erase model objects for everything that's getting deleted
 	DynaDAGLayout extraI(whole_);

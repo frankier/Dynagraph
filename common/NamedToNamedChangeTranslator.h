@@ -20,42 +20,61 @@
 #include "ChangeTranslator.h"
 
 namespace Dynagraph {
-/*
-// 
-struct NodeAlreadyExistedInconsistency : DGException2 {
-	NodeAlreadyExistedInconsistency(DString name) : DGException2("Internal inconsistency: node already existed",name,true) {}
-};
-struct EdgeAlreadyExistedInconsistency : DGException2 {
-	NodeAlreadyExistedInconsistency(DString name) : DGException2("Internal inconsistency: node already existed",name,true) {}
-};
-*/
 struct NodeDoesntExistInconsistency : DGException2 {
 	NodeDoesntExistInconsistency(DString name) : DGException2("Internal inconsistency: node doesn't exist",name,true) {}
 };
 struct EdgeDoesntExistInconsistency : DGException2 {
 	EdgeDoesntExistInconsistency(DString name) : DGException2("Internal inconsistency: edge doesn't exist",name,true) {}
 };
-template<typename Graph1,typename Graph2,typename ChangeActions>
+template<typename Graph1,typename Graph2>
+struct GoingNamedTransition {
+	ChangeQueue<Graph2> Q_;
+	GoingNamedTransition(Graph2 *world2,Graph2 *current2) : Q_(world2,current2) {}
+	GoingNamedTransition(const GoingNamedTransition &other) : Q_(other.Q_.whole,other.Q_.current) {
+		Q_ = other.Q_;
+	}
+	ChangeQueue<Graph2> NextQ() {
+		return Q_;
+	}
+	bool CheckRedundancy() {
+		return true;
+	}
+	void EndLastQ(ChangeQueue<Graph1> &Q) {}
+};
+template<typename Graph1,typename Graph2>
+struct ReturningNamedTransition {
+	ChangeQueue<Graph2> *nextQ_;
+	ChangeQueue<Graph2> &NextQ() {
+		return *nextQ_;
+	}
+	bool CheckRedundancy() {
+		return false;
+	}
+	void EndLastQ(ChangeQueue<Graph1> &Q) {
+		Q.Execute(true);
+	}
+};
+template<typename Graph1,typename Graph2,typename Transition,typename ChangeActions>
 struct NamedToNamedChangeTranslator : ChangeTranslator<Graph1,Graph2> {
-	Graph2 *world2_,*current2_;
+	Transition transition_;
 	ChangeActions actions_;
-	NamedToNamedChangeTranslator(Graph2 *world2,Graph2 *current2,const ChangeActions &action = ChangeActions()) : world2_(world2),current2_(current2),actions_(action) {}
+	NamedToNamedChangeTranslator(const Transition &transition = Transition(),const ChangeActions &action = ChangeActions()) 
+		: transition_(transition),actions_(action) {}
 	virtual void Process(ChangeQueue<Graph1> &Q1) {
-		ChangeQueue<Graph2> *pQ2=0;
-		ChangeQueue<Graph2> &Q2 = nextQ_?*nextQ_:*(pQ2 = new ChangeQueue<Graph2>(world2_,current2_));
+		ChangeQueue<Graph2> &Q2 = transition_.NextQ();
 		actions_.ModifyGraph(Q1.ModGraph(),Q2.ModGraph());
 		for(typename Graph1::node_iter ni = Q1.insN.nodes().begin(); ni!=Q1.insN.nodes().end(); ++ni) {
 			std::pair<typename Graph2::Node *,bool> nb2 = Q2.whole->fetch_node(gd<Name>(*ni),true);
 			//if(!nb2.second)
 			//	throw NodeAlreadyExistedInconsistency(gd<Name>(*ni));
-			typename Graph2::Node *n = Q2.InsNode(nb2.first).object;
+			typename Graph2::Node *n = Q2.InsNode(nb2.first,transition_.CheckRedundancy()).object;
 			actions_.InsertNode(*ni,n);
 		}
 		for(typename Graph1::graphedge_iter ei = Q1.insE.edges().begin(); ei!=Q1.insE.edges().end(); ++ei) {
 			std::pair<typename Graph2::Edge *,bool> eb2 = Q2.whole->fetch_edge(gd<Name>((*ei)->tail),gd<Name>((*ei)->head),gd<Name>(*ei),true);
 			//if(!eb2.second)
 			//	throw EdgeAlreadyExistedInconsistency(gd<Name>(*ei));
-			typename Graph2::Edge *e = Q2.InsEdge(eb2.first).object;
+			typename Graph2::Edge *e = Q2.InsEdge(eb2.first,transition_.CheckRedundancy()).object;
 			actions_.InsertEdge(*ei,e);
 		}
 		for(typename Graph1::node_iter ni = Q1.modN.nodes().begin(); ni!=Q1.modN.nodes().end(); ++ni) {
@@ -76,19 +95,18 @@ struct NamedToNamedChangeTranslator : ChangeTranslator<Graph1,Graph2> {
 			std::pair<typename Graph2::Node *,bool> nb2 = Q2.whole->fetch_node(gd<Name>(*ni),false);
 			if(nb2.second)
 				throw NodeDoesntExistInconsistency(gd<Name>(*ni));
-			typename Graph2::Node *n = Q2.DelNode(nb2.first).object;
+			typename Graph2::Node *n = Q2.DelNode(nb2.first,transition_.CheckRedundancy()).object;
 			actions_.DeleteNode(*ni,n);
 		}
 		for(typename Graph1::graphedge_iter ei = Q1.delE.edges().begin(); ei!=Q1.delE.edges().end(); ++ei) {
 			typename Graph2::Edge *e2 = Q2.whole->fetch_edge(gd<Name>(*ei));
 			if(!e2)
 				throw EdgeDoesntExistInconsistency(gd<Name>(*ei));
-			typename Graph2::Edge *e = Q2.DelEdge(e2).object;
+			typename Graph2::Edge *e = Q2.DelEdge(e2,transition_.CheckRedundancy()).object;
 			actions_.DeleteEdge(*ei,e);
 		}
+		transition_.EndLastQ(Q1);
 		NextProcess(Q2);
-		if(pQ2)
-			delete pQ2;
 	}
 };
 

@@ -69,7 +69,7 @@ struct TextViewWatcher : LinkedChangeProcessor<Graph>,IncrViewWatcher<Graph> {
 	// ChangeProcessor
 	void Process(ChangeQueue<Graph> &Q) {
 		emitChanges(cout,Q,gd<Name>(Q.whole).c_str());
-		Q.Okay(true);
+		Q.Execute(true);
 		ModifyFlags(Q) = 0;
 		doOutdot(Q.current);
 	}
@@ -101,12 +101,12 @@ EnginePair<Layout> stringizeEngine(EnginePair<Layout> engines) {
 	StringsOutEngine *xlateOut = new StringsOutEngine(g_transform);
 	xlateIn->next_ = engines.first;
 	engines.second->next_ = xlateOut;
-	return EnginePair(xlateIn,xlateOut);
+	return EnginePair<Layout>(xlateIn,xlateOut);
 }
 template<typename Layout1,typename Layout2,typename InTranslator,typename OutTranslator>
 struct WorldInABox : LinkedChangeProcessor<Layout1> {
-	typedef NamedToNamedChangeTranslator<Layout1,Layout2,InTranslator> XlateIn;
-	typedef NamedToNamedChangeTranslator<Layout2,Layout1,OutTranslator> XlateOut;
+	typedef NamedToNamedChangeTranslator<Layout1,Layout2,GoingNamedTransition<Layout1,Layout2>,InTranslator> XlateIn;
+	typedef NamedToNamedChangeTranslator<Layout2,Layout1,ReturningNamedTransition<Layout2,Layout1>,OutTranslator> XlateOut;
 	IncrWorld<Layout2> world_;
 	EnginePair<Layout2> innerEngines_;
 	ChangeProcessor<Layout1> *topEngine_;
@@ -115,15 +115,15 @@ struct WorldInABox : LinkedChangeProcessor<Layout1> {
 	void assignEngine(DString engines,IncrWorld<Layout1> &topWorld) {
 		if(innerEngines_.second)
 			innerEngines_.second->next_ = 0;
-		XlateIn *xlateIn = new XlateIn(&world_.whole_,&world_.current_);
-		xlateOut_ = new XlateOut(&topWorld.whole_,&topWorld.current_);
+		XlateIn *xlateIn = new XlateIn(GoingNamedTransition<Layout1,Layout2>(&world_.whole_,&world_.current_));
+		xlateOut_ = new XlateOut;
 		innerEngines_ = createEngine(engines,&world_.whole_,&world_.current_);
 		xlateIn->next_ = innerEngines_.first;
 		innerEngines_.second->next_ = xlateOut_;
 		topEngine_ = xlateIn;
 	}
 	void Process(ChangeQueue<Layout1> &Q) {
-		xlateOut_->nextQ_ = &Q;
+		xlateOut_->transition_.nextQ_ = &Q;
 		topEngine_->Process(Q);
 		NextProcess(Q);
 	}
@@ -138,8 +138,12 @@ IncrLangEvents *createHandlers(DString name,DString superengines,DString engines
 		typedef WorldInABox<GeneralLayout,Layout,LayoutToLayoutTranslator<GeneralLayout,Layout>,LayoutToLayoutTranslator<Layout,GeneralLayout> > Box;
 		Box *box = new Box;
 		box->assignEngine(engines,*world);
-		box->next_ = watcher;
-		handler->next_ = box;
+		EnginePair<GeneralLayout> enng = stringizeEngine(EnginePair<GeneralLayout>(box,box));
+		UpdateCurrentProcessor<GeneralLayout> *update = new UpdateCurrentProcessor<GeneralLayout>(&world->whole_,&world->current_);
+		update->next_ = enng.first;
+		enng.first = update;
+		enng.second->next_ = watcher;
+		handler->next_ = enng.first;
 		if(setEngs) 
 			SetAndMark(handler->Q_.ModGraph(),"engines",engines);
 		return handler;
@@ -149,7 +153,7 @@ IncrLangEvents *createHandlers(DString name,DString superengines,DString engines
 		IncrStrGraphHandler<Layout> *handler = new IncrStrGraphHandler<Layout>(world);
 		TextViewWatcher<Layout> *watcher = new TextViewWatcher<Layout>;
 		handler->watcher_ = watcher;
-		EnginePair<Layout> engine = createEngine(engines,&world->whole_,&world->current_);
+		EnginePair<Layout> engine = stringizeEngine(createEngine(engines,&world->whole_,&world->current_));
 		engine.second->next_ = watcher;
 		handler->next_ = engine.first;
 		if(setEngs) 
@@ -560,7 +564,7 @@ int main(int argc, char *args[]) {
 						Q.DelNode(*ni); // edges inducted
 					eng.Process(Q);
 					assert(current.nodes().empty());
-					Q.Okay(false);
+					Q.Execute(false);
 					ModifyFlags(Q) = 0;
 					Q.insN = layout;
 					for(DynaDAGLayout::graphedge_iter ei = layout.edges().begin(); ei!=layout.edges().end(); ++ei)
@@ -578,14 +582,14 @@ int main(int argc, char *args[]) {
 				}
 				catch(DynaDAG::BackForth bf) {
 					loops.Cancel();
-					Q.Okay(true);
+					Q.Execute(true);
 					ModifyFlags(Q) = 0;
 					layout.erase(bf.e);
 					continue;
 				}
 				loops.Field(r_stability,"percent of nodes moved",double(Q.modN.nodes().size())/double(current.nodes().size()));
 				stringsOut(g_transform,Q);
-				Q.Okay(true);
+				Q.Execute(true);
 				ModifyFlags(Q) = 0;
 				if(reportEnabled(r_readability)) {
 					Bounds b = gd<GraphGeom>(&layout).bounds;

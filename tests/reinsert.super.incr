@@ -1,0 +1,12 @@
+open graph g [superengines=y]
+lock graph g
+insert node g n
+delete node g n
+insert node g n
+unlock graph g
+insert node g m
+lock graph g
+insert edge g e m n
+delete edge g e
+insert edge g e m n
+unlock graph g

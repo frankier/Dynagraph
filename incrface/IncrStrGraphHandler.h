@@ -34,7 +34,7 @@ struct IncrStrGraphHandler : IncrLangEvents {
 	ChangeProcessor<NGraph> *next_;
     int locks_;
 
-    IncrStrGraphHandler(IncrWorld<NGraph> *world) : world_(world),Q_(&world_->whole_,&world_->current_),watcher_(0),next_(0) {}
+    IncrStrGraphHandler(IncrWorld<NGraph> *world) : world_(world),Q_(&world_->whole_,&world_->current_),watcher_(0),next_(0),locks_(0) {}
 	~IncrStrGraphHandler() {
 		// don't delete watcher because it's probably in engine chain
 		if(world_)
@@ -96,9 +96,10 @@ template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_open_graph(DString graph,const StrAttrs &attrs) {
     gd<Name>(&world_->whole_) = graph;
     SetAndMark(Q_.ModGraph(),attrs);
-	maybe_go();
     if(watcher_)
 		watcher_->IncrOpen(Q_);
+	Q_.Execute(true);
+	maybe_go();
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_close_graph() {
@@ -123,8 +124,6 @@ template<typename NGraph>
 DString IncrStrGraphHandler<NGraph>::incr_ev_ins_node(DString name, const StrAttrs &attrs, bool merge) {
     if(name.empty())
         name = randomName('n');
-	if(world_->whole_.fetch_node(name,false).first)
-		throw DGNodeNameUsed(name);
     typename NGraph::Node *n = fetch_node(name,true);
 	typename ChangeQueue<NGraph>::NodeResult result = Q_.InsNode(n);
 	SetAndMark(result.object,attrs);
@@ -135,8 +134,6 @@ template<typename NGraph>
 DString IncrStrGraphHandler<NGraph>::incr_ev_ins_edge(DString name, DString tailname, DString headname, const StrAttrs &attrs) {
     if(name.empty())
         name = randomName('e');
-	if(world_->whole_.fetch_edge(name))
-		throw DGEdgeNameUsed(name);
     typename NGraph::Edge *e = fetch_edge(tailname,headname,name,true);
 	typename ChangeQueue<NGraph>::EdgeResult result = Q_.InsEdge(e);
 	SetAndMark(result.object,attrs);

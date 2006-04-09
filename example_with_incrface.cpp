@@ -37,8 +37,8 @@ struct EgzamplView : DynaView {
 			cout << "node " << gd<Name>(*ni) << " deleted" << endl;
 		for(Layout::graphedge_iter ei = Q.delE.edges().begin(); ei!=Q.delE.edges().end(); ++ei)
 			cout << "edge " << gd<Name>(*ei) << " deleted" << endl;
-		// IMPORTANT: Okay must be called within IncrHappened
-		Q.Okay(true);
+		// IMPORTANT: Execute must be called within IncrHappened
+		Q.Execute(true);
 		ModifyFlags(Q) = 0;
 	}
 	void IncrNewNode(Layout::Node *n) {}

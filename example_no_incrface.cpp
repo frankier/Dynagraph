@@ -40,7 +40,7 @@ void main() {
 	server->Process(queue);
 	cout << "step 1" << endl;
 	printChanges(queue);
-	queue.Okay(true);
+	queue.Execute(true);
 	ModifyFlags(queue) = 0;
 	
 
@@ -51,7 +51,7 @@ void main() {
 	server->Process(queue);
 	cout << "step 2" << endl;
 	printChanges(queue);
-	queue.Okay(true);
+	queue.Execute(true);
 	ModifyFlags(queue) = 0;
 
 	gd<NodeGeom>(n).pos = Coord(5,5);
@@ -60,7 +60,7 @@ void main() {
 	server->Process(queue);
 	cout << "step 3" << endl;
 	printChanges(queue);
-	queue.Okay(true);
+	queue.Execute(true);
 	ModifyFlags(queue) = 0;
 
 	queue.DelNode(n);
@@ -68,6 +68,6 @@ void main() {
 	server->Process(queue);
 	cout << "step 4" << endl;
 	printChanges(queue);
-	queue.Okay(true);
+	queue.Execute(true);
 	ModifyFlags(queue) = 0;
 }
