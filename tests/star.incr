@@ -1,0 +1,21 @@
+open graph g [superengines=y]
+insert node g a
+insert node g b
+insert node g c
+insert node g d
+insert node g e
+insert node g f
+insert edge g z a b
+insert edge g y a c
+insert edge g x a d
+insert edge g w a e
+insert edge g v a f
+
+delete node g a
+insert node g a
+
+insert edge g z a b
+insert edge g y a c
+insert edge g x a d
+insert edge g w a e
+insert edge g v a f

@@ -91,19 +91,19 @@ struct NamedToNamedChangeTranslator : ChangeTranslator<Graph1,Graph2> {
 			typename Graph2::Edge *e = Q2.ModEdge(e2).object;
 			actions_.ModifyEdge(*ei,e);
 		}
-		for(typename Graph1::node_iter ni = Q1.delN.nodes().begin(); ni!=Q1.delN.nodes().end(); ++ni) {
-			std::pair<typename Graph2::Node *,bool> nb2 = Q2.whole->fetch_node(gd<Name>(*ni),false);
-			if(nb2.second)
-				throw NodeDoesntExistInconsistency(gd<Name>(*ni));
-			typename Graph2::Node *n = Q2.DelNode(nb2.first,transition_.CheckRedundancy()).object;
-			actions_.DeleteNode(*ni,n);
-		}
 		for(typename Graph1::graphedge_iter ei = Q1.delE.edges().begin(); ei!=Q1.delE.edges().end(); ++ei) {
 			typename Graph2::Edge *e2 = Q2.whole->fetch_edge(gd<Name>(*ei));
 			if(!e2)
 				throw EdgeDoesntExistInconsistency(gd<Name>(*ei));
 			typename Graph2::Edge *e = Q2.DelEdge(e2,transition_.CheckRedundancy()).object;
 			actions_.DeleteEdge(*ei,e);
+		}
+		for(typename Graph1::node_iter ni = Q1.delN.nodes().begin(); ni!=Q1.delN.nodes().end(); ++ni) {
+			std::pair<typename Graph2::Node *,bool> nb2 = Q2.whole->fetch_node(gd<Name>(*ni),false);
+			if(nb2.second)
+				throw NodeDoesntExistInconsistency(gd<Name>(*ni));
+			typename Graph2::Node *n = Q2.DelNode(nb2.first,transition_.CheckRedundancy()).object;
+			actions_.DeleteNode(*ni,n);
 		}
 		transition_.EndLastQ(Q1);
 		NextProcess(Q2);
