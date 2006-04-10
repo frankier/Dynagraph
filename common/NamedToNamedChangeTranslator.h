@@ -33,7 +33,7 @@ struct GoingNamedTransition {
 	GoingNamedTransition(const GoingNamedTransition &other) : Q_(other.Q_.whole,other.Q_.current) {
 		Q_ = other.Q_;
 	}
-	ChangeQueue<Graph2> NextQ() {
+	ChangeQueue<Graph2> &NextQ() {
 		return Q_;
 	}
 	bool CheckRedundancy() {
