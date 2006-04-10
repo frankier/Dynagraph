@@ -65,15 +65,11 @@ struct NamedToNamedChangeTranslator : ChangeTranslator<Graph1,Graph2> {
 		actions_.ModifyGraph(Q1.ModGraph(),Q2.ModGraph());
 		for(typename Graph1::node_iter ni = Q1.insN.nodes().begin(); ni!=Q1.insN.nodes().end(); ++ni) {
 			std::pair<typename Graph2::Node *,bool> nb2 = Q2.whole->fetch_node(gd<Name>(*ni),true);
-			//if(!nb2.second)
-			//	throw NodeAlreadyExistedInconsistency(gd<Name>(*ni));
 			typename Graph2::Node *n = Q2.InsNode(nb2.first,transition_.CheckRedundancy()).object;
 			actions_.InsertNode(*ni,n);
 		}
 		for(typename Graph1::graphedge_iter ei = Q1.insE.edges().begin(); ei!=Q1.insE.edges().end(); ++ei) {
 			std::pair<typename Graph2::Edge *,bool> eb2 = Q2.whole->fetch_edge(gd<Name>((*ei)->tail),gd<Name>((*ei)->head),gd<Name>(*ei),true);
-			//if(!eb2.second)
-			//	throw EdgeAlreadyExistedInconsistency(gd<Name>(*ei));
 			typename Graph2::Edge *e = Q2.InsEdge(eb2.first,transition_.CheckRedundancy()).object;
 			actions_.InsertEdge(*ei,e);
 		}
