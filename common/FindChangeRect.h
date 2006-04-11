@@ -17,6 +17,8 @@
 #ifndef FindChangeRect_h
 #define FindChangeRect_h
 
+#include "ChangeProcessor.h"
+
 namespace Dynagraph {
 
 template<typename Layout>

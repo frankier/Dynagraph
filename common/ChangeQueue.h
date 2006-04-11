@@ -18,6 +18,7 @@
 #define ChangeQueue_h
 
 #include "dgxep.h"
+#include "useful.h"
 
 namespace Dynagraph {
 

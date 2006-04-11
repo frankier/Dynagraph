@@ -1,4 +1,4 @@
-open graph g
+open graph g [superengines=y]
 insert node g a
 insert node g b
 insert node g c

@@ -1,7 +1,8 @@
-open graph g
+open graph g [superengines=y]
 insert node g a
 insert node g b
 insert node g c
+lock graph g
 insert node g d
 insert node g e
 insert node g f
@@ -16,6 +17,7 @@ insert node g a
 
 insert edge g z a b
 insert edge g y a c
+unlock graph g
 insert edge g x a d
 insert edge g w a e
 insert edge g v a f

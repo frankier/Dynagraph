@@ -18,6 +18,8 @@
 #ifndef Transform_h
 #define Transform_h
 
+#include "Geometry.h"
+
 namespace Dynagraph {
 
 // dynagraph uses dimensionless up-positive coords, but not everyone else does!
