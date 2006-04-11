@@ -42,7 +42,7 @@ struct ExampleResponse : LinkedChangeProcessor<Layout>,IncrViewWatcher<Layout> {
 		// Being at the end of the processing chain, this must clear the queue
 		Q.Execute(true);
 	}
-	// IncrViewWatcher callbacks 
+	// IncrViewWatcher callbacks, not used in this example
 	void IncrOpen(ChangeQueue<Graph> &Q) {}
 	void IncrClose(ChangeQueue<Graph> &Q) {}
 	void FulfilGraph(Graph *g) {}

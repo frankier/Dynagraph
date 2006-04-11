@@ -129,37 +129,40 @@ struct WorldInABox : LinkedChangeProcessor<Layout1> {
 	}
 };
 template<typename Layout>
+EnginePair<GeneralLayout> worldGuts(DString engines,IncrWorld<GeneralLayout> &world) {
+	typedef WorldInABox<GeneralLayout,Layout,LayoutToLayoutTranslator<GeneralLayout,Layout>,LayoutToLayoutTranslator<Layout,GeneralLayout> > Box;
+	Box *box = new Box;
+	box->assignEngine(engines,world);
+	EnginePair<GeneralLayout> engine(box,box);
+	engine.Prepend(new UpdateCurrentProcessor<GeneralLayout>(&world.whole_,&world.current_));
+	return engine;
+}
+template<typename Layout>
+EnginePair<Layout> simpleGuts(DString engines,IncrWorld<Layout> &world) {
+	return createEngine(engines,&world.whole_,&world.current_);
+}
+template<typename Layout,typename GutsCreator>
+IncrLangEvents *createWorldHandlerWatcher(DString engines,GutsCreator gutsFun,bool setEngs) {
+	IncrWorld<Layout> *world = new IncrWorld<Layout>;
+	IncrStrGraphHandler<Layout> *handler = new IncrStrGraphHandler<Layout>(world);
+	TextViewWatcher<Layout> *watcher = new TextViewWatcher<Layout>;
+	handler->watcher_ = watcher;
+
+	EnginePair<Layout> eng0 = gutsFun(engines,*world);
+
+	EnginePair<Layout> engine = stringizeEngine(eng0);
+	engine.second->next_ = watcher;
+	handler->next_ = engine.first;
+	if(setEngs) 
+		SetAndMark(handler->Q_.ModGraph(),"engines",engines);
+	return handler;
+}
+template<typename Layout>
 IncrLangEvents *createHandlers(DString name,DString superengines,DString engines,bool setEngs) {
-	if(superengines) {
-		IncrWorld<GeneralLayout> *world = new IncrWorld<GeneralLayout>;
-		IncrStrGraphHandler<GeneralLayout> *handler = new IncrStrGraphHandler<GeneralLayout>(world);
-		TextViewWatcher<GeneralLayout> *watcher = new TextViewWatcher<GeneralLayout>;
-		handler->watcher_ = watcher;
-		typedef WorldInABox<GeneralLayout,Layout,LayoutToLayoutTranslator<GeneralLayout,Layout>,LayoutToLayoutTranslator<Layout,GeneralLayout> > Box;
-		Box *box = new Box;
-		box->assignEngine(engines,*world);
-		EnginePair<GeneralLayout> enng = stringizeEngine(EnginePair<GeneralLayout>(box,box));
-		UpdateCurrentProcessor<GeneralLayout> *update = new UpdateCurrentProcessor<GeneralLayout>(&world->whole_,&world->current_);
-		update->next_ = enng.first;
-		enng.first = update;
-		enng.second->next_ = watcher;
-		handler->next_ = enng.first;
-		if(setEngs) 
-			SetAndMark(handler->Q_.ModGraph(),"engines",engines);
-		return handler;
-	}
-	else {
-		IncrWorld<Layout> *world = new IncrWorld<Layout>;
-		IncrStrGraphHandler<Layout> *handler = new IncrStrGraphHandler<Layout>(world);
-		TextViewWatcher<Layout> *watcher = new TextViewWatcher<Layout>;
-		handler->watcher_ = watcher;
-		EnginePair<Layout> engine = stringizeEngine(createEngine(engines,&world->whole_,&world->current_));
-		engine.second->next_ = watcher;
-		handler->next_ = engine.first;
-		if(setEngs) 
-			SetAndMark(handler->Q_.ModGraph(),"engines",engines);
-		return handler;
-	}
+	if(superengines) 
+		return createWorldHandlerWatcher<GeneralLayout>(engines,worldGuts<Layout>,setEngs);
+	else 
+		return createWorldHandlerWatcher<Layout>(engines,simpleGuts<Layout>,setEngs);		
 }
 
 struct IncrCalledBack : IncrCallbacks {

@@ -61,6 +61,14 @@ struct EnginePair : std::pair<LinkedChangeProcessor<Graph>*,LinkedChangeProcesso
 		this->first = first;
 		this->second = second;
 	}
+	void Prepend(LinkedChangeProcessor<Graph> *eng) {
+		eng->next_ = this->first;
+		this->first = eng;
+	}
+	void Append(LinkedChangeProcessor<Graph> *eng) {
+		this->second.next_ = eng;
+		this->second = eng;
+	}
 };
 
 template<typename Graph>
