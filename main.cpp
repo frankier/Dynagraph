@@ -25,14 +25,17 @@
 #include "fdp/fdp.h"
 #include "incrface/incrout.h"
 #include "incrface/incrparse.h"
-#include "incrface/createEngine.h"
-#include "TestTraversals.h"
 
+#include "incrface/createGeneralEngine.h"
+#include "incrface/createFDPEngine.h"
+#include "incrface/createDynaDAGEngine.h"
 #include "incrface/IncrStrGraphHandler.h"
-#include "common/NamedToNamedChangeTranslator.h"
+#include "common/WorldInABox.h"
 #include "common/LayoutToLayoutTranslator.h"
 #include "common/InternalTranslator.h"
 #include "common/StringLayoutTranslator.h"
+
+#include "TestTraversals.h"
 
 #define CATCH_XEP
 
@@ -103,66 +106,49 @@ EnginePair<Layout> stringizeEngine(EnginePair<Layout> engines) {
 	engines.second->next_ = xlateOut;
 	return EnginePair<Layout>(xlateIn,xlateOut);
 }
-template<typename Layout1,typename Layout2,typename InTranslator,typename OutTranslator>
-struct WorldInABox : LinkedChangeProcessor<Layout1> {
-	typedef NamedToNamedChangeTranslator<Layout1,Layout2,GoingNamedTransition<Layout1,Layout2>,InTranslator> XlateIn;
-	typedef NamedToNamedChangeTranslator<Layout2,Layout1,ReturningNamedTransition<Layout2,Layout1>,OutTranslator> XlateOut;
-	IncrWorld<Layout2> world_;
-	EnginePair<Layout2> innerEngines_;
-	ChangeProcessor<Layout1> *topEngine_;
-	XlateOut *xlateOut_;
-	WorldInABox() : topEngine_(0),xlateOut_(0) {}
-	void assignEngine(DString engines,IncrWorld<Layout1> &topWorld) {
-		if(innerEngines_.second)
-			innerEngines_.second->next_ = 0;
-		XlateIn *xlateIn = new XlateIn(GoingNamedTransition<Layout1,Layout2>(&world_.whole_,&world_.current_));
-		xlateOut_ = new XlateOut;
-		innerEngines_ = createEngine(engines,&world_.whole_,&world_.current_);
-		xlateIn->next_ = innerEngines_.first;
-		innerEngines_.second->next_ = xlateOut_;
-		topEngine_ = xlateIn;
-	}
-	void Process(ChangeQueue<Layout1> &Q) {
-		xlateOut_->transition_.nextQ_ = &Q;
-		topEngine_->Process(Q);
-		NextProcess(Q);
+template<typename Layout>
+struct WorldGuts {
+	DString engines_,superengines_;
+	WorldGuts(DString superengines, DString engines) : engines_(engines),superengines_(superengines) {}
+	EnginePair<GeneralLayout> operator()(ChangeQueue<GeneralLayout> &Q,IncrWorld<GeneralLayout> &world) {
+		SetAndMark(Q.ModGraph(),"engines",engines_);
+		typedef WorldInABox<GeneralLayout,Layout,LayoutToLayoutTranslator<GeneralLayout,Layout>,LayoutToLayoutTranslator<Layout,GeneralLayout> > Box;
+		Box *box = new Box;
+		box->assignEngine(engines_,world);
+		EnginePair<GeneralLayout> engine(box,box);
+		engine.Prepend(createEngine<GeneralLayout>(superengines_,&world.whole_,&world.current_));
+		return engine;
 	}
 };
 template<typename Layout>
-EnginePair<GeneralLayout> worldGuts(DString engines,IncrWorld<GeneralLayout> &world) {
-	typedef WorldInABox<GeneralLayout,Layout,LayoutToLayoutTranslator<GeneralLayout,Layout>,LayoutToLayoutTranslator<Layout,GeneralLayout> > Box;
-	Box *box = new Box;
-	box->assignEngine(engines,world);
-	EnginePair<GeneralLayout> engine(box,box);
-	engine.Prepend(new UpdateCurrentProcessor<GeneralLayout>(&world.whole_,&world.current_));
-	return engine;
-}
-template<typename Layout>
-EnginePair<Layout> simpleGuts(DString engines,IncrWorld<Layout> &world) {
-	return createEngine(engines,&world.whole_,&world.current_);
-}
+struct SimpleGuts {
+	DString engines_;
+	SimpleGuts(DString engines) : engines_(engines) {}
+	EnginePair<Layout> operator()(ChangeQueue<Layout> &Q,IncrWorld<Layout> &world) {
+		SetAndMark(Q.ModGraph(),"engines",engines_);
+		return createEngine(engines_,&world.whole_,&world.current_);
+	}
+};
 template<typename Layout,typename GutsCreator>
-IncrLangEvents *createWorldHandlerWatcher(DString engines,GutsCreator gutsFun,bool setEngs) {
+IncrLangEvents *createWorldHandlerWatcher(GutsCreator gutsFun) {
 	IncrWorld<Layout> *world = new IncrWorld<Layout>;
 	IncrStrGraphHandler<Layout> *handler = new IncrStrGraphHandler<Layout>(world);
 	TextViewWatcher<Layout> *watcher = new TextViewWatcher<Layout>;
 	handler->watcher_ = watcher;
 
-	EnginePair<Layout> eng0 = gutsFun(engines,*world);
-
+	EnginePair<Layout> eng0 = gutsFun(handler->Q_,*world);
 	EnginePair<Layout> engine = stringizeEngine(eng0);
+
 	engine.second->next_ = watcher;
 	handler->next_ = engine.first;
-	if(setEngs) 
-		SetAndMark(handler->Q_.ModGraph(),"engines",engines);
 	return handler;
 }
 template<typename Layout>
-IncrLangEvents *createHandlers(DString name,DString superengines,DString engines,bool setEngs) {
+IncrLangEvents *createHandlers(DString name,DString superengines,DString engines) {
 	if(superengines) 
-		return createWorldHandlerWatcher<GeneralLayout>(engines,worldGuts<Layout>,setEngs);
+		return createWorldHandlerWatcher<GeneralLayout>(WorldGuts<Layout>(superengines,engines));
 	else 
-		return createWorldHandlerWatcher<Layout>(engines,simpleGuts<Layout>,setEngs);		
+		return createWorldHandlerWatcher<Layout>(SimpleGuts<Layout>(engines));		
 }
 
 struct IncrCalledBack : IncrCallbacks {
@@ -174,14 +160,17 @@ struct IncrCalledBack : IncrCallbacks {
     }
     IncrLangEvents *incr_cb_create_handler(Name name,const StrAttrs &attrs) {
 		StrAttrs::const_iterator ai = attrs.find("type");
-		DString type,engines;
+		DString type,engines,superengines=attrs.look("superengines");
 		bool setEngs=false;
 		if(ai!=attrs.end()) 
 			type = ai->second;
 		else {
 			engines = attrs.look("engines");
 			if(!engines) {
-				engines = "shapegen,dynadag,labels";
+				if(superengines.find("shapegen",0)!=DString::npos)
+					engines = "dynadag";
+				else
+					engines = "shapegen,dynadag";
 				setEngs = true;
 			}
 			if(engines.find("dynadag",0)!=DString::npos)
@@ -193,9 +182,9 @@ struct IncrCalledBack : IncrCallbacks {
 		}
 		IncrLangEvents *ret;
 		if(type=="dynadag") 
-			ret = createHandlers<DynaDAGLayout>(name,attrs.look("superengines"),engines,setEngs);
+			ret = createHandlers<DynaDAGLayout>(name,superengines,engines);
 		else if(type=="fdp")
-			ret = createHandlers<FDPLayout>(name,attrs.look("superengines"),engines,setEngs);
+			ret = createHandlers<FDPLayout>(name,superengines,engines);
     	return ret;
 	}
     void incr_cb_destroy_handler(IncrLangEvents *h) {

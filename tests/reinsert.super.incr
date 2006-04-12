@@ -1,4 +1,4 @@
-open graph g [superengines=y]
+open graph g [superengines=shapegen]
 lock graph g
 insert node g n
 delete node g n

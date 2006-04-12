@@ -22,7 +22,7 @@
 #include "common/breakList.h"
 #include "DinoSearchLook.h"
 #include "DinoPatternLook.h"
-#include "GeneralLayout.h"
+#include "common/GeneralLayout.h"
 
 using namespace std;
 

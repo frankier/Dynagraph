@@ -14,7 +14,11 @@
 *                   http://dynagraph.org                  *
 **********************************************************/
 
+#ifndef Modify_h
+#define Modify_h
+
 #include "LayoutAttrs.h"
+#include "ChangeQueue.h"
 
 namespace Dynagraph {
 
@@ -36,3 +40,5 @@ inline Update &ModifyFlags(ChangeQueue<Layout> &Q) {
 }
 
 } // namespace Dynagraph
+
+#endif // Modify_h

@@ -55,6 +55,32 @@ struct ChangeTranslator : LinkedChangeProcessor<Graph1> {
 	}
 };
 
+template<typename Graph>
+struct EnginePair : std::pair<LinkedChangeProcessor<Graph>*,LinkedChangeProcessor<Graph>*> {
+	EnginePair() {}
+	EnginePair(LinkedChangeProcessor<Graph> *first,LinkedChangeProcessor<Graph> *second) {
+		this->first = first;
+		this->second = second;
+	}
+	void Prepend(LinkedChangeProcessor<Graph> *eng) {
+		eng->next_ = this->first;
+		this->first = eng;
+	}
+	void Prepend(const EnginePair<Graph> &other) {
+		other.second->next_ = this->first;
+		this->first = other.first;
+	}
+	void Append(LinkedChangeProcessor<Graph> *eng) {
+		this->second.next_ = eng;
+		this->second = eng;
+	}
+	void Append(const EnginePair<Graph> &other) {
+		this->second.next_ = other.first;
+		this->second = other.second;
+	}
+};
+
+
 // simple server that just updates the current subgraph based on changes.
 // this must be done only once, that's why individual layout servers can't be responsible.
 template<typename Graph>
