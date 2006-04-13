@@ -26,14 +26,13 @@
 #include "incrface/incrout.h"
 #include "incrface/incrparse.h"
 
-#include "incrface/createGeneralEngine.h"
-#include "incrface/createFDPEngine.h"
-#include "incrface/createDynaDAGEngine.h"
 #include "incrface/IncrStrGraphHandler.h"
 #include "common/WorldInABox.h"
 #include "common/LayoutToLayoutTranslator.h"
 #include "common/InternalTranslator.h"
 #include "common/StringLayoutTranslator.h"
+#include "common/createEngine.h"
+#include "common/GeneralLayout.h"
 
 #include "TestTraversals.h"
 
