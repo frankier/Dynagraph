@@ -21,18 +21,15 @@
 #include "common/emitGraph.h"
 #include "common/stringsIn.h"
 #include "common/stringsOut.h"
-#include "dynadag/DynaDAG.h"
-#include "fdp/fdp.h"
 #include "incrface/incrout.h"
 #include "incrface/incrparse.h"
 
-#include "incrface/IncrStrGraphHandler.h"
-#include "common/WorldInABox.h"
-#include "common/LayoutToLayoutTranslator.h"
-#include "common/InternalTranslator.h"
-#include "common/StringLayoutTranslator.h"
-#include "common/createEngine.h"
+#include "dynadag/DynaDAG.h"
+#include "fdp/fdp.h"
 #include "common/GeneralLayout.h"
+
+#include "incrface/createStrWorldAndHandler.h"
+
 
 #include "TestTraversals.h"
 
@@ -67,7 +64,7 @@ void doOutdot(Layout *l) {
 }
 
 template<typename Graph>
-struct TextViewWatcher : LinkedChangeProcessor<Graph>,IncrViewWatcher<Graph> {
+struct TextChangeOutput : LinkedChangeProcessor<Graph> {
 	// ChangeProcessor
 	void Process(ChangeQueue<Graph> &Q) {
 		emitChanges(cout,Q,gd<Name>(Q.whole).c_str());
@@ -75,6 +72,9 @@ struct TextViewWatcher : LinkedChangeProcessor<Graph>,IncrViewWatcher<Graph> {
 		ModifyFlags(Q) = 0;
 		doOutdot(Q.current);
 	}
+};
+template<typename Graph>
+struct TextWatcherOutput : IncrViewWatcher<Graph> {
 	// IncrViewWatcher
 	void IncrOpen(ChangeQueue<Graph> &Q) {
 		cout << "open graph " << gd<Name>(Q.whole) << " " << gd<StrAttrs>(Q.whole) << endl;
@@ -95,59 +95,13 @@ struct TextViewWatcher : LinkedChangeProcessor<Graph>,IncrViewWatcher<Graph> {
 	}
 };
 template<typename Layout>
-EnginePair<Layout> stringizeEngine(EnginePair<Layout> engines) {
-	EnginePair<Layout> ret;
-	typedef InternalTranslator2<Layout,StringToLayoutTranslator<Layout,Layout> > StringsInEngine;
-	typedef InternalTranslator2<Layout,LayoutToStringTranslator<Layout,Layout> > StringsOutEngine;
-	StringsInEngine *xlateIn = new StringsInEngine(StringToLayoutTranslator<Layout,Layout>(g_transform,g_useDotDefaults));
-	StringsOutEngine *xlateOut = new StringsOutEngine(g_transform);
-	xlateIn->next_ = engines.first;
-	engines.second->next_ = xlateOut;
-	return EnginePair<Layout>(xlateIn,xlateOut);
-}
-template<typename Layout>
-struct WorldGuts {
-	DString engines_,superengines_;
-	WorldGuts(DString superengines, DString engines) : engines_(engines),superengines_(superengines) {}
-	EnginePair<GeneralLayout> operator()(ChangeQueue<GeneralLayout> &Q,IncrWorld<GeneralLayout> &world) {
-		SetAndMark(Q.ModGraph(),"engines",engines_);
-		typedef WorldInABox<GeneralLayout,Layout,LayoutToLayoutTranslator<GeneralLayout,Layout>,LayoutToLayoutTranslator<Layout,GeneralLayout> > Box;
-		Box *box = new Box;
-		box->assignEngine(engines_,world);
-		EnginePair<GeneralLayout> engine(box,box);
-		engine.Prepend(createEngine<GeneralLayout>(superengines_,&world.whole_,&world.current_));
-		return engine;
-	}
-};
-template<typename Layout>
-struct SimpleGuts {
-	DString engines_;
-	SimpleGuts(DString engines) : engines_(engines) {}
-	EnginePair<Layout> operator()(ChangeQueue<Layout> &Q,IncrWorld<Layout> &world) {
-		SetAndMark(Q.ModGraph(),"engines",engines_);
-		return createEngine(engines_,&world.whole_,&world.current_);
-	}
-};
-template<typename Layout,typename GutsCreator>
-IncrLangEvents *createWorldHandlerWatcher(GutsCreator gutsFun) {
-	IncrWorld<Layout> *world = new IncrWorld<Layout>;
-	IncrStrGraphHandler<Layout> *handler = new IncrStrGraphHandler<Layout>(world);
-	TextViewWatcher<Layout> *watcher = new TextViewWatcher<Layout>;
-	handler->watcher_ = watcher;
-
-	EnginePair<Layout> eng0 = gutsFun(handler->Q_,*world);
-	EnginePair<Layout> engine = stringizeEngine(eng0);
-
-	engine.second->next_ = watcher;
-	handler->next_ = engine.first;
-	return handler;
-}
-template<typename Layout>
 IncrLangEvents *createHandlers(DString name,DString superengines,DString engines) {
 	if(superengines) 
-		return createWorldHandlerWatcher<GeneralLayout>(WorldGuts<Layout>(superengines,engines));
+		return createStrWorldAndHandler<GeneralLayout>(WorldGuts<Layout>(superengines,engines),
+			new TextWatcherOutput<GeneralLayout>,0,new TextChangeOutput<GeneralLayout>);
 	else 
-		return createWorldHandlerWatcher<Layout>(SimpleGuts<Layout>(engines));		
+		return createStrWorldAndHandler<Layout>(SimpleGuts<Layout>(engines),
+			new TextWatcherOutput<Layout>,0,new TextChangeOutput<Layout>);
 }
 
 struct IncrCalledBack : IncrCallbacks {

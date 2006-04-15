@@ -1,23 +1,23 @@
-open graph g
-insert node g a
-insert node g b
-insert node g c
-lock graph g
-insert node g d
-insert node g e
-insert node g f
-insert edge g z a b
-insert edge g y a c
-insert edge g x a d
-insert edge g w a e
-insert edge g v a f
+open graph V
+insert node V a
+insert node V b
+insert node V c
+lock graph V
+insert node V d
+insert node V e
+insert node V f
+insert edge V z a b
+insert edge V y a c
+insert edge V x a d
+insert edge V w a e
+insert edge V v a f
 
-delete node g a
-insert node g a
+delete node V a
+insert node V a
 
-insert edge g z a b
-insert edge g y a c
-unlock graph g
-insert edge g x a d
-insert edge g w a e
-insert edge g v a f
+insert edge V z a b
+insert edge V y a c
+unlock graph V
+insert edge V x a d
+insert edge V w a e
+insert edge V v a f

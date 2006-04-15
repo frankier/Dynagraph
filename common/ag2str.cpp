@@ -58,8 +58,11 @@ StrGraph *ag2str(Agraph_t *g) {
 	Remem remem;
 	StrGraph *gg = new StrGraph;
 	gd<Name>(gg) = agnameof(g);
+	/*
+	// BAAAD: THIS CODE CRASHED VC++ DEBUGGER.  PLEASE REINSTATE****!!!!!!!
 	for(Agsym_t *sym = agnxtattr(g,AGRAPH,0); sym; sym = agnxtattr(g,AGRAPH,sym))
 		gd<StrAttrs>(gg)[sym->name] = agget(gg,sym->name);
+		*/
 
 	int anonN(0);
 	Agnode_t *n;

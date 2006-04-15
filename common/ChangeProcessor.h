@@ -71,11 +71,11 @@ struct EnginePair : std::pair<LinkedChangeProcessor<Graph>*,LinkedChangeProcesso
 		this->first = other.first;
 	}
 	void Append(LinkedChangeProcessor<Graph> *eng) {
-		this->second.next_ = eng;
+		this->second->next_ = eng;
 		this->second = eng;
 	}
 	void Append(const EnginePair<Graph> &other) {
-		this->second.next_ = other.first;
+		this->second->next_ = other.first;
 		this->second = other.second;
 	}
 };

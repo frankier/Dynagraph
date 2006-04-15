@@ -1,14 +1,14 @@
-open graph g
-insert node g n
-delete node g n
-insert node g n
-delete node g n
-insert node g n
+open graph V
+insert node V n
+delete node V n
+insert node V n
+delete node V n
+insert node V n
 
-insert node g m
-insert edge g e m n
-delete edge g e
-insert edge g e m n
-delete edge g e
-insert edge g e n m
-delete edge g e
+insert node V m
+insert edge V e m n
+delete edge V e
+insert edge V e m n
+delete edge V e
+insert edge V e n m
+delete edge V e

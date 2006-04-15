@@ -168,15 +168,6 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
 			<File
-				RelativePath=".\createDynaDAGEngine.cpp">
-			</File>
-			<File
-				RelativePath=".\createFDPEngine.cpp">
-			</File>
-			<File
-				RelativePath=".\createGeneralEngine.cpp">
-			</File>
-			<File
 				RelativePath=".\DinoMachineTranslator.cpp">
 			</File>
 			<File
