@@ -10,12 +10,12 @@ INCS =	-I.. -I../.. \
 DEFINES = -DHAVE_CONFIG_H
 
 OBJS = \
-	Line.o          	Region.o \
-	StringDict.o 		Solvers.o 		LineTricks.o \
-	Transform.o             ag2str.o                Colors.o \
-	ellipse2bezier.o        genpoly.o               parsestr.o \
-	stringsIn.o             stringsOut.o            time-o-matic.o \
-	useful.o                xlines.o
+	createGeneralEngine.o \
+	Colors.o	Line.o			LineTricks.o	Region.o \
+	Solvers.o	StringDict.o		Transform.o \
+	ag2str.o	ellipse2bezier.o	genpoly.o	parsestr.o \
+	stringsIn.o	stringsOut.o		time-o-matic.o	useful.o \
+	xlines.o
 
 HFILES = \
 	AttrValues.h		BoostLGraph.h			CalculateBounds.h \

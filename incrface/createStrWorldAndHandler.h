@@ -50,16 +50,17 @@ struct SimpleGuts {
 };
 template<typename Layout,typename GutsCreator>
 IncrLangEvents *createStrWorldAndHandler(GutsCreator gutsFun,IncrViewWatcher<Layout> *watcher,
-									  LinkedChangeProcessor<Layout> *before,LinkedChangeProcessor<Layout> *after) {
+									  LinkedChangeProcessor<Layout> *before,LinkedChangeProcessor<Layout> *after,
+									  Transform *transform, bool useDotDefaults) {
 	IncrWorld<Layout> *world = new IncrWorld<Layout>;
 	IncrStrGraphHandler<Layout> *handler = new IncrStrGraphHandler<Layout>(world);
 	handler->watcher_ = watcher;
 
 	// apply first graph attributes before creating engine (not pretty)
-	StringToLayoutTranslator<Layout,Layout>(g_transform,g_useDotDefaults).ModifyGraph(&world->whole_,&world->whole_);
+	StringToLayoutTranslator<Layout,Layout>(transform,useDotDefaults).ModifyGraph(&world->whole_,&world->whole_);
 
 	EnginePair<Layout> eng0 = gutsFun(handler->Q_,*world);
-	EnginePair<Layout> engine = stringizeEngine(eng0);
+	EnginePair<Layout> engine = stringizeEngine(eng0,transform,useDotDefaults);
 	if(before)
 		engine.Prepend(before);
 	if(after)

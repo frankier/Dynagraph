@@ -98,10 +98,12 @@ template<typename Layout>
 IncrLangEvents *createHandlers(DString name,DString superengines,DString engines) {
 	if(superengines) 
 		return createStrWorldAndHandler<GeneralLayout>(WorldGuts<Layout>(superengines,engines),
-			new TextWatcherOutput<GeneralLayout>,0,new TextChangeOutput<GeneralLayout>);
+			new TextWatcherOutput<GeneralLayout>,0,new TextChangeOutput<GeneralLayout>,
+			g_transform,g_useDotDefaults);
 	else 
 		return createStrWorldAndHandler<Layout>(SimpleGuts<Layout>(engines),
-			new TextWatcherOutput<Layout>,0,new TextChangeOutput<Layout>);
+			new TextWatcherOutput<Layout>,0,new TextChangeOutput<Layout>,
+			g_transform,g_useDotDefaults);
 }
 
 struct IncrCalledBack : IncrCallbacks {
