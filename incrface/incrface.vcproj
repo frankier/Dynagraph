@@ -135,7 +135,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="release\incrface\incrface.lib"/>
+				OutputFile="static\incrface\incrface.lib"/>
 			<Tool
 				Name="VCMIDLTool"
 				TypeLibraryName="$(InputName).tlb"

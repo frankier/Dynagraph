@@ -148,10 +148,10 @@
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="TRUE"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile="release\voronoi/voronoi.pch"
-				AssemblerListingLocation="release\voronoi/"
-				ObjectFile="release\voronoi/"
-				ProgramDataBaseFileName="release\voronoi/"
+				PrecompiledHeaderFile="static\voronoi/voronoi.pch"
+				AssemblerListingLocation="static\voronoi/"
+				ObjectFile="static\voronoi/"
+				ProgramDataBaseFileName="static\voronoi/"
 				WarningLevel="3"
 				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="3"
@@ -161,7 +161,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="release\voronoi\voronoi.lib"
+				OutputFile="static\voronoi\voronoi.lib"
 				SuppressStartupBanner="TRUE"/>
 			<Tool
 				Name="VCMIDLTool"

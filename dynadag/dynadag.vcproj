@@ -149,10 +149,10 @@
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="TRUE"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile="release\dynadag/dynadag.pch"
-				AssemblerListingLocation="release\dynadag/"
-				ObjectFile="release\dynadag/"
-				ProgramDataBaseFileName="release\dynadag/"
+				PrecompiledHeaderFile="static\dynadag/dynadag.pch"
+				AssemblerListingLocation="static\dynadag/"
+				ObjectFile="static\dynadag/"
+				ProgramDataBaseFileName="static\dynadag/"
 				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="TRUE"
@@ -163,7 +163,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="release\dynadag\dynadag.lib"
+				OutputFile="static\dynadag\dynadag.lib"
 				SuppressStartupBanner="TRUE"/>
 			<Tool
 				Name="VCMIDLTool"

@@ -150,10 +150,10 @@
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="TRUE"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile="release\fdp/fdp.pch"
-				AssemblerListingLocation="release\fdp/"
-				ObjectFile="release\fdp/"
-				ProgramDataBaseFileName="release\fdp/"
+				PrecompiledHeaderFile="static\fdp/fdp.pch"
+				AssemblerListingLocation="static\fdp/"
+				ObjectFile="static\fdp/"
+				ProgramDataBaseFileName="static\fdp/"
 				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="TRUE"
@@ -164,7 +164,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="release\fdp\fdp.lib"
+				OutputFile="static\fdp\fdp.lib"
 				SuppressStartupBanner="TRUE"/>
 			<Tool
 				Name="VCMIDLTool"

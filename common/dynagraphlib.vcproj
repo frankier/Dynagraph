@@ -147,10 +147,10 @@
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="TRUE"
-				PrecompiledHeaderFile="release\dynagraphlib/dynagraphlib.pch"
-				AssemblerListingLocation="release\dynagraphlib/"
-				ObjectFile="release\dynagraphlib/"
-				ProgramDataBaseFileName="release\dynagraphlib/"
+				PrecompiledHeaderFile="static\dynagraphlib/dynagraphlib.pch"
+				AssemblerListingLocation="static\dynagraphlib/"
+				ObjectFile="static\dynagraphlib/"
+				ProgramDataBaseFileName="static\dynagraphlib/"
 				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="TRUE"
@@ -161,7 +161,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="release\dynagraphlib\dynagraphlib.lib"
+				OutputFile="static\dynagraphlib\dynagraphlib.lib"
 				SuppressStartupBanner="TRUE"/>
 			<Tool
 				Name="VCMIDLTool"
