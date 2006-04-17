@@ -47,6 +47,10 @@ struct AddEngine {
 		creators<Graph>::getMap()[name] = EngineCreatorInstance<Engine>::create;
 	}
 };
+template<typename Graph,typename Engine>
+void add_engine_creator(DString name) {
+	creators<Graph>::getMap()[name] = EngineCreatorInstance<Engine>::create;
+}
 
 template<typename Graph>
 EnginePair<Graph> createEngine(DString engines,Graph *whole,Graph *current) {

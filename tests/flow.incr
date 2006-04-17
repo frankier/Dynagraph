@@ -1,0 +1,16 @@
+open graph V
+insert node V n
+insert node V m
+insert node V o
+insert node V p
+insert node V A [label="",flow=0100000]
+modify node V A [shape=none,width=0,height=0]
+insert edge V h n m
+insert edge V e n A [minlen=0.5]
+insert edge V f A o [minlen=0.5]
+insert edge V g A p [minlen=0.5]
+insert node V B [shape=none,width=0,height=0,flow=1,label=""]
+insert node V q
+insert edge V i n B [minlen=0.5]
+insert edge V j B o [minlen=0.5]
+insert edge V k B q [minlen=0.5]

@@ -13,7 +13,6 @@
 #include "shortspline/ObAvSplinerEngine.h"
 
 using namespace Dynagraph;
-
 AddEngine<GeneralLayout, LabelPlacer<GeneralLayout> > GLLabels("labels");
 AddEngine<GeneralLayout, ShapeGenerator<GeneralLayout> > GLShapes("shapegen");
 AddEngine<GeneralLayout, ColorByAge<GeneralLayout> > GLColors("colorbyage");
