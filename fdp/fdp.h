@@ -35,6 +35,7 @@ struct StillHasEdges : DGException {
 };
 
 struct FDPServer : LinkedChangeProcessor<FDPLayout>,Grid::Visitor {
+	FDPLayout *whole_,*current_;
 	int numIters;
 	bool useComp,
 		useGrid;
@@ -69,7 +70,6 @@ struct FDPServer : LinkedChangeProcessor<FDPLayout>,Grid::Visitor {
 	// Grid::Visitor
 	int VisitCell(Cell *cell,Grid *grid);
 private:
-	FDPLayout *whole_,*current_;
 	FDPModel model;
 
 	void createModelNode(FDPLayout::Node *n);

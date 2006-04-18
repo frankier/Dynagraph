@@ -23,6 +23,7 @@ namespace Dynagraph {
 
 template<typename Graph>
 struct IncrViewWatcher {
+	virtual ~IncrViewWatcher() {}
 	virtual void IncrOpen(ChangeQueue<Graph> &Q) = 0;
 	virtual void IncrClose(ChangeQueue<Graph> &Q) = 0;
 	// do these belong here?  all i know is the implementation does not belong e.g. in IncrStrGraphHandler
@@ -34,4 +35,4 @@ struct IncrViewWatcher {
 
 } // namespace Dynagraph
 
-#endif IncrViewWatcher_h
+#endif // IncrViewWatcher_h

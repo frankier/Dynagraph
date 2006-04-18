@@ -20,6 +20,7 @@
 namespace Dynagraph {
 
 struct IncrLangEvents {
+	virtual ~IncrLangEvents() {}
 	virtual DString dinotype() = 0; // returns "layout" "abstract" etc so xlators etc can downcast
 	virtual void incr_ev_open_graph(DString graph,const StrAttrs &attrs) = 0;
 	virtual void incr_ev_close_graph() = 0;
@@ -38,6 +39,7 @@ struct IncrLangEvents {
     virtual void incr_ev_load_strgraph(StrGraph *sg,bool merge, bool del) = 0;
 };
 struct IncrCallbacks {
+	virtual ~IncrCallbacks() {}
 	virtual IncrLangEvents *incr_cb_create_handler(Name name,const StrAttrs &attrs) = 0;
 	virtual void incr_cb_destroy_handler(IncrLangEvents *hand) = 0;
 	virtual void incr_cb_fulfil_graph(DString name,StrGraph *sg) = 0;

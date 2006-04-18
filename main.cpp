@@ -30,6 +30,8 @@
 
 #include "incrface/createStrWorldAndHandler.h"
 
+#include "dynagraph.version.h"
+
 using namespace std;
 using namespace Dynagraph;
 
@@ -187,6 +189,17 @@ pair<bool,char*> findDescription(switchval<V> *array,int n,V v) {
 			return make_pair(true,array[i].desc);
 	return make_pair(false,(char*)0);
 }
+void print_version() {
+	report(r_cmdline,"Dynagraph version %s\n",DYNAGRAPH_VERSION_DOTS_QUOTED);
+}
+void print_help() {
+	report(r_cmdline,"dynagraph arguments:\n"
+		"   -d use dot-compatible coordinates (position in points, node size in inches)\n"
+		"   -i filename input .dot file\n"
+		"   -oN filename write stream N to filename\n"
+		"   -oL filename output layout steps to filename{step}.dot\n");
+}
+
 
 int main(int argc, char *args[]) {
 	enableReport(r_error,stderr);
@@ -274,16 +287,18 @@ int main(int argc, char *args[]) {
 			g_transform  = &g_dotRatios;
 			g_useDotDefaults = true;
 			break;
+		case 'v':
+			print_version();
+			return 0;
 		default:
 			report(r_error,"switch -%c not recognized\n",args[i][1]);
+			print_help();
+			return 1;
 		case 'h':
 		case '?':
-			report(r_cmdline,"dynagraph arguments:\n"
-				"   -d use dot-compatible coordinates (position in points, node size in inches)\n"
-				"   -i filename input .dot file\n"
-				"   -oN filename write stream N to filename\n"
-				"   -oL filename output layout steps to filename{step}.dot\n");
-			return 1;
+			print_version();
+			print_help();
+			return 0;
 		}
 	}
 	setvbuf(stdin,0,_IONBF,0);

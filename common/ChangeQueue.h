@@ -217,7 +217,7 @@ typename ChangeQueue<Graph>::EdgeResult ChangeQueue<Graph>::DelEdge(typename Gra
 		result.action = nothing;
 		result.object = 0;
 		unbornE.insert(e);
-		insE.inducing_erase_edge(e);
+		insE.inducing_erase_edge(ie);
 	}
 	else {
 		modE.inducing_erase_edge(e);

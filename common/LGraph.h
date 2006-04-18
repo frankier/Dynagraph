@@ -391,7 +391,7 @@ public:
 			parent->m_subs.push_back(this);
 	    *this = other;
 	}
-	~LGraph() {
+	virtual ~LGraph() {
 		clear();
 		if(parent)
 			parent->m_subs.remove(this);

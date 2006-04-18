@@ -27,4 +27,4 @@ struct IncrWorld {
 
 } // namespace Dynagraph
 
-#endif IncrWorld_h
+#endif // IncrWorld_h

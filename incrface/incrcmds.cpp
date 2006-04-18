@@ -67,16 +67,18 @@ void incr_open_graph(const char *graph) {
         h = g_incrCallback->incr_cb_create_handler(graph,g_currAttrs);
     if(!h)
         return;
-	try {
+	//try 
+{
 		if(dmn.alreadyOpen)
 			h->incr_ev_mod_graph(g_currAttrs);
 		else
 			h->incr_ev_open_graph(graph,g_currAttrs);
 	}
+/*
 	catch(...) {
         delete h;
 		throw;
-	}
+	}*/
 	if(!dmn.handler)
 		dmn.handler = h;
 	dmn.alreadyOpen = true;
