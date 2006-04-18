@@ -69,6 +69,10 @@ install: dynagraph gengraph
 	$(MKPATH) $(BINDIR)
 	$(INSTALL) dynagraph $(BINDIR)
 
+test: dynagraph
+	(cd tests; make run)
+
 distclean clean:
-	(for i in ${SUBDIRS}; do (cd $$i; make $@); done)       
+	(for i in ${SUBDIRS}; do (cd $$i; make $@); done)     
+	(cd tests; make clean)  
 	$(RM) *.o core dynagraph gengraph
