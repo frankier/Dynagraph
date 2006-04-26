@@ -1,0 +1,51 @@
+all: libdynagraph.a
+
+ROOT=..
+include $(ROOT)/Config.mk
+include $(ROOT)/makearch/$(ARCH)
+
+INCS =	-I.. -I../.. \
+	-I$(GRAPHVIZ_INC)
+
+DEFINES = 
+
+OBJS = \
+	ColorByAge.o            Dynagraph.o             FindChangeRect.o \
+	LabelPlacer.o           Line.o          PolyBarriers.o \
+	Region.o                Route.o         ShapeGenerator.o \
+	Shortest.o              Solvers.o               StringDict.o \
+	Transform.o             ag2str.o \
+	colors.o                ellipse2bezier.o        genpoly.o \
+	parsestr.o              stringsIn.o             stringsOut.o \
+	time-o-matic.o  useful.o                xlines.o
+
+HFILES = \
+	BezCoeffs.h             BoostLGraph.h           ColorByAge.h            DiffStrGraph.h \
+	Dynagraph.h             FindChangeRect.h        GeomUtil.h              Geometry.h \
+	GraphBuffer.h           LGraph-cdt.h            LGraph.h                LineTricks.h \
+	PathPlan.h              Solvers.h               StrAttr.h               StreamGeom.h \
+	StringDict.h            Transform.h             ag2str.h                attrvalues.h \
+	breakList.h             bufferGraphStream.h     colors.h                derivable_dt.h \
+	dgxep.h                 diff_strgraph.h         dt.h                    ellipse2bezier.h \
+	emitGraph.h             engine_replacement.h    freelist.h              genpoly.h \
+	moremath.h              parsestr.h              randomName.h            reorient.h \
+	stringsIn.h             stringsOut.h            time-o-matic.h          traversal.h \
+	useful.h                weightedMedian.h
+
+libdynagraph.a : $(OBJS)
+	$(AR) cr libdynagraph.a $(OBJS)
+	$(RANLIB) libdynagraph.a
+
+$(OBJS) : $(HFILES)
+
+install: libdynagraph.a
+	$(MKPATH) $(INCDIR)
+	$(INSTALL) *.h $(INCDIR)
+	$(MKPATH) $(LIBDIR)
+	$(INSTALL) libdynagraph.a $(LIBDIR)
+
+clean:
+	$(RM) *.o core
+
+distclean: clean
+	$(RM) *.a lib*.so.*
