@@ -26,6 +26,8 @@
 #include "incrface/incrout.h"
 #include "incrface/incrparse.h"
 
+#include "dynagraph.version.h"
+
 using namespace std;
 #define CATCH_XEP
 
@@ -413,6 +415,9 @@ pair<bool,char*> findDescription(switchval<V> *array,int n,V v) {
 			return make_pair(true,array[i].desc);
 	return make_pair(false,(char*)0);
 }
+void print_version() {
+	report(r_cmdline,"Dynagraph version %s\n",DYNAGRAPH_VERSION_DOTS_QUOTED);
+}
 int main(int argc, char *args[]) {
 	enum travmode traversal_mode = unspecified;
 	enableReport(r_error,stderr);
@@ -536,11 +541,21 @@ int main(int argc, char *args[]) {
 		g_transform  = &g_dotRatios;
         g_useDotDefaults = true;
 		break;
+	case 'v':
+		print_version();
+		return 0;
+	case '-':
+		if(!strcmp(args[i]+2,"version")) {
+			print_version();
+			return 0;
+		}
+		//else fallthru
 	default:
-		report(r_error,"switch -%c not recognized\n",args[i][1]);
+		report(r_error,"argument %s not recognized\n",args[i]);
 	case 'h':
 	case '?':
 		report(r_cmdline,"dynagraph arguments:\n"
+			"   -v (--version) print version information only\n"
 			"   -d use dot-compatible coordinates (position in points, node size in inches)\n"
 			"   -i filename input .dot file\n"
 			"   -ta choose traversal method\n");
