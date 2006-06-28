@@ -40,7 +40,7 @@ bool Config::IsSuppressed(DDModel::Node *n) {
 		case DDPath::headSuppressed:
 			return gd<DDNode>(n).rank!=path->suppressRank // the suppressRank is itself never suppressed!
 				&& (path->suppression==DDPath::headSuppressed)
-					^ (gd<NSRankerEdge>(path->layoutE).direction==NSRankerEdge::reversed)
+					^ (path->direction==DDPath::reversed)
 					^ (gd<DDNode>(n).rank<path->suppressRank);
 		default:
 			return false;

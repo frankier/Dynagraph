@@ -27,7 +27,6 @@
 
 // wrong
 #include "dynadag/NSRankerAttrs.h"
-#include "dynadag/ExtraRanks.h"
 
 namespace Dynagraph {
 
@@ -224,7 +223,7 @@ struct EdgeGeom {
 		toTop; // default both true: measure from bottom of tail to top of head
 	bool constraint, // whether this edge affects ranking; set false by DynaDAG if last in cycle or if a node is nailed
 		manualRoute, // try to use the line specified in pos
-		backward; // do rank constaints backward
+		backward; // draw as if points from head to tail
 	EdgeGeom() : tailPort(Coord(0.0,0.0)),headPort(Coord(0.0,0.0)),tailClipped(true),
 		headClipped(true),minLength(1.0),fromBottom(true),toTop(true),constraint(true),
 		manualRoute(false),backward(false) {}
@@ -241,7 +240,7 @@ struct EdgeLabel {
 typedef std::vector<EdgeLabel> EdgeLabels;
 
 // These are the basic layout description attributes
-struct GraphAttrs : Name,Hit,Drawn,GraphGeom,Translation,StaticLabels,Interruptable,ExtraRanks {
+struct GraphAttrs : Name,Hit,Drawn,GraphGeom,Translation,StaticLabels,Interruptable {
 	GraphAttrs(Name name) : Name(name) {}
 };
 struct NodeAttrs : Name,Hit,Drawn,NodeGeom,NodeLabels,IfPolyDef, DynaDAG::NSRankerNode {

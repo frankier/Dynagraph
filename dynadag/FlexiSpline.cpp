@@ -175,7 +175,7 @@ bool FlexiSpliner::MakeEdgeSpline(DDPath *path,SpliningLevel level) { //,Obstacl
 	EdgeGeom &eg = gd<EdgeGeom>(e);
 	if(path->suppression!=DDPath::suppressed) {
 		DDModel::Node *tl,*hd;
-		if(gd<NSRankerEdge>(e).direction==NSRankerEdge::flat) {
+		if(path->direction==DDPath::flat) {
 			tl = DDp(e->tail)->bottom();
 			hd = DDp(e->head)->top();
 		}
@@ -195,7 +195,7 @@ bool FlexiSpliner::MakeEdgeSpline(DDPath *path,SpliningLevel level) { //,Obstacl
 			assert(ei!=path->eEnd());
 		}
 		else
-			tailpt = (gd<NSRankerEdge>(e).direction==NSRankerEdge::reversed?eg.tailPort:eg.headPort).pos + gd<DDNode>(tl).multi->pos();
+			tailpt = (path->direction==DDPath::reversed?eg.tailPort:eg.headPort).pos + gd<DDNode>(tl).multi->pos();
 		if(path->suppression==DDPath::headSuppressed) {
 			DDPath::edge_iter ei;
 			for(ei = path->eBegin(); ei!=path->eEnd(); ++ei)
@@ -206,11 +206,11 @@ bool FlexiSpliner::MakeEdgeSpline(DDPath *path,SpliningLevel level) { //,Obstacl
 			assert(ei!=path->eEnd());
 		}
 		else
-			headpt = (gd<NSRankerEdge>(e).direction==NSRankerEdge::reversed?eg.headPort:eg.tailPort).pos + gd<DDNode>(hd).multi->pos();
+			headpt = (path->direction==DDPath::reversed?eg.headPort:eg.tailPort).pos + gd<DDNode>(hd).multi->pos();
 		Line &unclipped = path->unclippedPath;
 		Line region;
 		assert(e->tail!=e->head); // DynaDAGServer should draw self-edges
-		if(gd<NSRankerEdge>(e).direction==NSRankerEdge::flat) { // flat edge
+		if(path->direction==DDPath::flat) { // flat edge
 			/*
 			// disabled because of header dependencies (needs more work)
 			DDModel::Node *left = tl,
@@ -258,21 +258,15 @@ bool FlexiSpliner::MakeEdgeSpline(DDPath *path,SpliningLevel level) { //,Obstacl
 							path->suppression==DDPath::tailSuppressed ? (tailpt - gd<NodeGeom>(e->tail).pos) : DDp(e->tail)->flowSlope,
 							path->suppression==DDPath::headSuppressed ? (gd<NodeGeom>(e->head).pos - headpt) : DDp(e->head)->flowSlope
 						);
-						if(gd<NSRankerEdge>(e).direction==NSRankerEdge::reversed) {
+						if(path->direction==DDPath::reversed) {
 							Coord t = endSlopes.b;
 							endSlopes.b = -endSlopes.a;
 							endSlopes.a = -t;
-						}
-						/*
-						if(gd<NSRankerEdge>(e).direction==NSRankerEdge::reversed) {
-							endSlopes.a = -endSlopes.a;
-							endSlopes.b = -endSlopes.b;
 						}
 						if(gd<EdgeGeom>(e).backward) {
 							endSlopes.a = -endSlopes.a;
 							endSlopes.b = -endSlopes.b;
 						}
-						*/
 						check(PathPlot::Route(barriers,polylineRoute,endSlopes,unclipped));
 					}
 					else
@@ -299,13 +293,13 @@ bool FlexiSpliner::MakeEdgeSpline(DDPath *path,SpliningLevel level) { //,Obstacl
 	}
 	NodeGeom &tg = gd<NodeGeom>(e->tail),
 		&hg = gd<NodeGeom>(e->head);
-	if(gd<NSRankerEdge>(e).direction==NSRankerEdge::reversed) 
+	if(path->direction==DDPath::reversed) 
 		eg.pos.ClipEndpoints(path->unclippedPath,hg.pos,eg.headClipped?&hg.region:0,
 			tg.pos,eg.tailClipped?&tg.region:0);
 	else
 		eg.pos.ClipEndpoints(path->unclippedPath,tg.pos,eg.tailClipped?&tg.region:0,
 			hg.pos,eg.headClipped?&hg.region:0);
-	if((gd<NSRankerEdge>(e).direction==NSRankerEdge::reversed)) // ^ gd<EdgeGeom>(e).backward) 
+	if((path->direction==DDPath::reversed) ^ gd<EdgeGeom>(e).backward) 
 		reverse(eg.pos.begin(),eg.pos.end());
 	return true;
 }
