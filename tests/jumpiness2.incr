@@ -291,13 +291,15 @@ insert edge V 103 102 94 [color="-3618616",thickness="1",emphasizeflow=true]
 
 unlock graph V
 
-pulse graph V [
+pulse graph V [phase="finish"]
 
 lock graph V
 
 modify node V 9 [color="-65536",stroke_clr="-65536",thickness="0"]
 
 unlock graph V
+
+pulse graph V [phase="finish"]
 
 lock graph V
 
@@ -314,6 +316,8 @@ modify node V 15 []
 modify node V 27 [color="-65536",stroke_clr="-65536",thickness="0"]
 
 unlock graph V
+
+pulse graph V [phase="untangle"]
 
 lock graph V
 
