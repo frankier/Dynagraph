@@ -251,6 +251,7 @@ void Config::Restore(Ranks &backup) {
 	ranking = backup;
 	for(Ranks::iterator ri = ranking.begin(); ri!=ranking.end(); ++ri) {
 		Rank *r = *ri;
+		r->check_backdup_x();
 		for(NodeV::iterator ni = r->order.begin(); ni!=r->order.end(); ++ni) {
 			int o = int(ni - r->order.begin());
 			if(gd<DDNode>(*ni).order != o) {
@@ -260,7 +261,7 @@ void Config::Restore(Ranks &backup) {
 			gd<DDNode>(*ni).cur.x = r->x_backup[o];
 		}
 	}
-	//checkX();
+	checkX();
 }
 
 } // namespace DynaDAG

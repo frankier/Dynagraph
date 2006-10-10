@@ -557,7 +557,7 @@ void DynaDAGServer::Process() {
 			&& gd<GraphGeom>(&world_->current_).reportIntermediate
 			&& gd<Interruptible>(&world_->current_).attrs.look("phase","untangle")=="untangle"
 			&& gd<Interruptible>(&world_->current_).attrs.look("step","done")=="done") {
-		makeXConsistent(); // this horror superceded by horrible x_backup 
+		//makeXConsistent(); // this horror superceded by horrible x_backup 
 		rememberOld();
 		StrAttrs pulseAttrs;
 		pulseAttrs["phase"] = "untangle";

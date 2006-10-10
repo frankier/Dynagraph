@@ -178,6 +178,7 @@ void DotlikeOptimizer::Reorder(DynaDAGLayout &nodes,DynaDAGLayout &edges) {
 	OrderConstraintSwitchable switchable;
 
 	config.checkX();
+	config.ranking.backup_x();
 	Config::Ranks backupC = config.ranking;
 	// optimize once ignoring node crossings (they can scare the sifting alg)
 	// in a sec we'll sift using the node penalty to clean up
@@ -227,7 +228,8 @@ void DotlikeOptimizer::Reorder(DynaDAGLayout &nodes,DynaDAGLayout &edges) {
 			}
 
 			if(score<best) {
-				//config.checkX();
+				config.checkX();
+				config.ranking.backup_x();
 				backupC = config.ranking;
 				backupM = matrix;
 				best = score;

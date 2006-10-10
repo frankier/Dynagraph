@@ -50,8 +50,16 @@ struct Rank {
 	void backup_x() {
 		// ugly figure out better way to do this
 		x_backup.resize(order.size());
-		for(NodeV::iterator ni = order.begin(); ni!=order.end(); ++ni)
-			x_backup[ni-order.begin()] = gd<DDNode>(*ni).cur.x;
+		for(NodeV::iterator ni = order.begin(); ni!=order.end(); ++ni) {
+			double x = gd<DDNode>(*ni).cur.x;
+			x_backup[ni-order.begin()] = x;
+		}
+		check_backdup_x();
+	}
+	void check_backdup_x() {
+		for(std::vector<double>::iterator xi = x_backup.begin(); xi!=x_backup.end(); ++xi)
+			if(xi!=x_backup.begin())
+				dgassert(*xi>=*(xi-1));
 	}
 };
 

@@ -61,11 +61,14 @@ struct FlexiRanks : std::set<Rank*,CompRank> {
 		oldRanks = o.oldRanks;
 		newRanks = o.newRanks;
 		for(iterator ri = o.begin(); ri!=o.end(); ++ri) {
-			(*ri)->backup_x(); // ugh
 			Rank *nr = new Rank(**ri);
 			insert(nr);
 		}
 		return *this;
+	}
+	void backup_x() {
+		for(iterator ri = begin(); ri!=end(); ++ri)
+			(*ri)->backup_x(); // ugh
 	}
 	Rank *front() { return *begin(); }
 	Rank *back() { return *rbegin(); }
