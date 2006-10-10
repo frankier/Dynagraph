@@ -57,9 +57,11 @@ struct Rank {
 		check_backdup_x();
 	}
 	void check_backdup_x() {
+#ifndef NDEBUG
 		for(std::vector<double>::iterator xi = x_backup.begin(); xi!=x_backup.end(); ++xi)
 			if(xi!=x_backup.begin())
 				dgassert(*xi>=*(xi-1));
+#endif
 	}
 };
 
