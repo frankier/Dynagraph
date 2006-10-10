@@ -58,27 +58,8 @@ struct IncrStrGraphHandler : IncrLangEvents {
 			delete next_;
 	}
 
-	void incr_interrupt_ev() {
-#ifdef STRHANDLER_DO_THREADS
-		if(layoutThread_) {
-			layoutThread_->interrupt();
-			delete layoutThread_;
-			layoutThread_ = 0;
-		}
-#endif
-	}
-	bool maybe_go(typename ChangeProcessor<NGraph>::Function purpose = &ChangeProcessor<NGraph>::Process) {
-		if(locks_>0)
-			return false;
-		if(next_) {
-#ifdef STRHANDLER_DO_THREADS
-			layoutThread_ = new DynagraphThread<NGraph>(*world_,next_,purpose);
-#else
-			(next_->*purpose)();
-#endif
-		}
-		return true;
-	}
+	bool maybe_go(typename ChangeProcessor<NGraph>::Function purpose = &ChangeProcessor<NGraph>::Process);
+	void wait();
 
 	typename NGraph::Node *fetch_node(DString name,bool create) {
 		typename NGraph::Node *n = world_->whole_.fetch_node(name,create).first;
@@ -101,9 +82,11 @@ struct IncrStrGraphHandler : IncrLangEvents {
 
     // IncrLangEvents
 	DString dinotype() { return "stringraph"; }
+	void incr_ev_interrupt();
 	void incr_ev_open_graph(DString graph,const StrAttrs &attrs);
 	void incr_ev_close_graph();
 	void incr_ev_mod_graph(const StrAttrs &attrs);
+	void incr_ev_pulse(const StrAttrs &attrs);
 	void incr_ev_lock();
 	void incr_ev_unlock();
 	DString incr_ev_ins_node(DString name, const StrAttrs &attrs, bool merge);
@@ -117,7 +100,40 @@ struct IncrStrGraphHandler : IncrLangEvents {
 	void incr_ev_req_edge(DString name);
     void incr_ev_load_strgraph(StrGraph *sg,bool merge, bool del);
 };
-
+template<typename NGraph>
+bool IncrStrGraphHandler<NGraph>::maybe_go(typename ChangeProcessor<NGraph>::Function purpose) {
+	if(locks_>0)
+		return false;
+	if(next_) {
+#ifdef STRHANDLER_DO_THREADS
+		dgassert(!layoutThread_); // must either interrupt or wait between runs
+		layoutThread_ = new DynagraphThread<NGraph>(*world_,next_,purpose);
+#else
+		(next_->*purpose)();
+#endif
+	}
+	return true;
+}
+template<typename NGraph>
+void IncrStrGraphHandler<NGraph>::wait() {
+#ifdef STRHANDLER_DO_THREADS
+	if(layoutThread_) {
+		layoutThread_->wait();
+		delete layoutThread_;
+		layoutThread_ = 0;
+	}
+#endif
+}
+template<typename NGraph>
+void IncrStrGraphHandler<NGraph>::incr_ev_interrupt() {
+#ifdef STRHANDLER_DO_THREADS
+	if(layoutThread_) {
+		layoutThread_->interrupt();
+		delete layoutThread_;
+		layoutThread_ = 0;
+	}
+#endif
+}
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_open_graph(DString graph,const StrAttrs &attrs) {
 	maybe_go(&ChangeProcessor<NGraph>::Open);
@@ -125,11 +141,18 @@ void IncrStrGraphHandler<NGraph>::incr_ev_open_graph(DString graph,const StrAttr
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_close_graph() {
 	maybe_go(&ChangeProcessor<NGraph>::Close);
+	wait(); // don't allow parent to delete me until i'm finished! (why thread then? foolish consistency?)
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_mod_graph(const StrAttrs &attrs) {
 	SetAndMark(world_->Q_.ModGraph(),attrs);
     maybe_go();
+}
+template<typename NGraph>
+void IncrStrGraphHandler<NGraph>::incr_ev_pulse(const StrAttrs &attrs) {
+	// WEIRD: received pulse becomes an interrupt which then should generate the same pulse as output!
+	gd<Interruptible>(&world_->whole_).attrs = attrs;
+    incr_ev_interrupt();
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_lock() {

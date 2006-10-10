@@ -61,6 +61,7 @@ struct FlexiRanks : std::set<Rank*,CompRank> {
 		oldRanks = o.oldRanks;
 		newRanks = o.newRanks;
 		for(iterator ri = o.begin(); ri!=o.end(); ++ri) {
+			(*ri)->backup_x(); // ugh
 			Rank *nr = new Rank(**ri);
 			insert(nr);
 		}

@@ -469,7 +469,7 @@ void DynaDAGServer::dumpModel() {
 		reports[dgr::modelDump] << "\t\"" << (*ei)->tail << "\"->\"" << (*ei)->head << "\" [label=\"" << *ei << "\\n" << gd<DDEdge>(*ei).path << "\"];" << endl;
 	reports[dgr::modelDump] << "}" << endl;
 }
-void InsDelArePasse(DDChangeQueue &Q) {
+void ClearInsDel(DDChangeQueue &Q) {
 	Q.ExecuteDeletions();
 	// turn inserts into modifies (this belongs within ChangeQueue, except the DG::Update specific part)
 	for(DynaDAGLayout::node_iter ni = Q.insN.nodes().begin(); ni!=Q.insN.nodes().end();) {
@@ -486,6 +486,20 @@ void InsDelArePasse(DDChangeQueue &Q) {
 	}
 	Q.insE.clear();
 }
+// again this seems like something any layout engine might want
+bool ChangesAreRelevant(DDChangeQueue &Q) {
+	if(Q.Empty())
+		return igd<Update>(Q.ModGraph()).flags;
+	if(!Q.insN.empty() || !Q.insE.empty() || !Q.delN.empty() || !Q.delE.empty())
+		return true;
+	for(DynaDAGLayout::node_iter ni = Q.modN.nodes().begin(); ni!=Q.modN.nodes().end(); ++ni)
+		if(igd<Update>(*ni).flags)
+			return true;
+	for(DynaDAGLayout::graphedge_iter ei = Q.modE.edges().begin(); ei!=Q.modE.edges().end(); ++ei)
+		if(igd<Update>(*ei).flags)
+			return true;
+	return false;
+}
 void DynaDAGServer::Process() {
 	ChangeQueue<DynaDAGLayout> &Q = this->world_->Q_;
 	loops.Field(dgr::dynadag,"nodes inserted - input",Q.insN.nodes().size());
@@ -495,9 +509,9 @@ void DynaDAGServer::Process() {
 	loops.Field(dgr::dynadag,"nodes deleted - input",Q.delN.nodes().size());
 	loops.Field(dgr::dynadag,"edges deleted - input",Q.delE.nodes().size());
 	
-	if(Q.Empty()&&igd<Update>(Q.ModGraph()).flags==0) {
+	if(!ChangesAreRelevant(Q)) {
 		NextProcess();
-		Q.Clear(); // e.g. to clear irrelevant StrChanges
+		Q.Clear(); 
 		return;
 	}
 
@@ -520,11 +534,18 @@ void DynaDAGServer::Process() {
 		NextProcess();
 		// client has heard about inserts so they're now mods, 
 		// and deletes can be blown away (should someone Higher do this?)
-		InsDelArePasse(Q);
+		ClearInsDel(Q);
 	}
 
-	if(gd<Interruptible>(&world_->current_).interrupt && gd<GraphGeom>(&world_->current_).reportIntermediate) {
+	if(gd<Interruptible>(&world_->current_).interrupt 
+			&& gd<GraphGeom>(&world_->current_).reportIntermediate
+			&& gd<Interruptible>(&world_->current_).attrs.look("phase","update")=="update"
+			&& gd<Interruptible>(&world_->current_).attrs.look("step","done")=="done") {
 		rememberOld();
+		StrAttrs pulseAttrs;
+		pulseAttrs["phase"] = "update";
+		pulseAttrs["step"] = "done";
+		NextPulse(pulseAttrs);
 		return;
 	}
 
@@ -532,9 +553,16 @@ void DynaDAGServer::Process() {
 	optimizer->Reorder(world_->current_,world_->current_);//crossN,crossE);
 	timer.LoopPoint(dgr::timing,"crossing optimization");
 
-	if(gd<Interruptible>(&world_->current_).interrupt && gd<GraphGeom>(&world_->current_).reportIntermediate) {
-		makeXConsistent();
+	if(gd<Interruptible>(&world_->current_).interrupt 
+			&& gd<GraphGeom>(&world_->current_).reportIntermediate
+			&& gd<Interruptible>(&world_->current_).attrs.look("phase","untangle")=="untangle"
+			&& gd<Interruptible>(&world_->current_).attrs.look("step","done")=="done") {
+		makeXConsistent(); // this horror superceded by horrible x_backup 
 		rememberOld();
+		StrAttrs pulseAttrs;
+		pulseAttrs["phase"] = "untangle";
+		pulseAttrs["step"] = "done";
+		NextPulse(pulseAttrs);
 		return;
 	}
 
@@ -545,8 +573,15 @@ void DynaDAGServer::Process() {
 	config.SetYs();
 	timer.LoopPoint(dgr::timing,"optimize x coordinates");
 
-	if(gd<Interruptible>(&world_->current_).interrupt && gd<GraphGeom>(&world_->current_).reportIntermediate) {
+	if(gd<Interruptible>(&world_->current_).interrupt 
+			&& gd<GraphGeom>(&world_->current_).reportIntermediate
+			&& gd<Interruptible>(&world_->current_).attrs.look("phase","xopt")=="xopt"
+			&& gd<Interruptible>(&world_->current_).attrs.look("step","done")=="done") {
 		rememberOld();
+		StrAttrs pulseAttrs;
+		pulseAttrs["phase"] = "xopt";
+		pulseAttrs["step"] = "done";
+		NextPulse(pulseAttrs);
 		return;
 	}
 

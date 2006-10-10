@@ -177,7 +177,8 @@ void DotlikeOptimizer::Reorder(DynaDAGLayout &nodes,DynaDAGLayout &edges) {
 	CrossingCompare crossing(config,matrix,false);
 	OrderConstraintSwitchable switchable;
 
-	Config::Ranks backup = config.ranking;
+	config.checkX();
+	Config::Ranks backupC = config.ranking;
 	// optimize once ignoring node crossings (they can scare the sifting alg)
 	// in a sec we'll sift using the node penalty to clean up
 	matrix.m_light = true;
@@ -226,7 +227,8 @@ void DotlikeOptimizer::Reorder(DynaDAGLayout &nodes,DynaDAGLayout &edges) {
 			}
 
 			if(score<best) {
-				backup = config.ranking;
+				//config.checkX();
+				backupC = config.ranking;
 				backupM = matrix;
 				best = score;
 				bestPass = pass;
@@ -237,7 +239,7 @@ void DotlikeOptimizer::Reorder(DynaDAGLayout &nodes,DynaDAGLayout &edges) {
 			pass++;
 		}
 		if(score>best || tired==TIRE) {
-			config.Restore(backup);
+			config.Restore(backupC);
 			//matrix.recompute();
 			matrix = backupM;
 			tired = 0;
@@ -251,7 +253,7 @@ void DotlikeOptimizer::Reorder(DynaDAGLayout &nodes,DynaDAGLayout &edges) {
 		}
 
 	if(score>=best) {
-		config.Restore(backup);
+		config.Restore(backupC);
 	}
 	loops.Field(dgr::crossopt,"model edge crossings",best);
 
@@ -275,11 +277,11 @@ void DotlikeOptimizer::Reorder(DynaDAGLayout &nodes,DynaDAGLayout &edges) {
 	bool improved;
 	do {
 		improved = false;
-		backup = config.ranking;
+		backupC = config.ranking;
 		bubblePass(config,matrix,affectedRanks,DOWN,RIGHT,switchable,crossing);
 		unsigned down = matrix.sumCrossings();
 		Config::Ranks backup2 = config.ranking;
-		config.Restore(backup);
+		config.Restore(backupC);
 		matrix.recompute();
 		bubblePass(config,matrix,affectedRanks,UP,RIGHT,switchable,crossing);
 		unsigned up = matrix.sumCrossings();

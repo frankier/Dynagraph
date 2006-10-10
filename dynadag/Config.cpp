@@ -257,8 +257,10 @@ void Config::Restore(Ranks &backup) {
 				InvalidateAdjMVals(*ni);
 				gd<DDNode>(*ni).order = o;
 			}
+			gd<DDNode>(*ni).cur.x = r->x_backup[o];
 		}
 	}
+	//checkX();
 }
 
 } // namespace DynaDAG
