@@ -25,7 +25,6 @@ struct IncrLangEvents {
 	virtual ~IncrLangEvents() {}
 	virtual DString dinotype() = 0; // returns "layout" "abstract" etc so xlators etc can downcast
 	virtual void incr_ev_shutdown() = 0;
-	virtual void incr_ev_interrupt() = 0;
 	virtual void incr_ev_open_graph(DString graph,const StrAttrs &attrs) = 0;
 	virtual void incr_ev_close_graph() = 0;
 	virtual void incr_ev_mod_graph(const StrAttrs &attrs) = 0;
