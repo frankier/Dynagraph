@@ -17,6 +17,8 @@
 #ifndef Rank_h
 #define Rank_h
 
+#include <algorithm>
+
 namespace Dynagraph {
 namespace DynaDAG {
 
@@ -50,18 +52,12 @@ struct Rank {
 	void backup_x() {
 		// ugly figure out better way to do this
 		x_backup.resize(order.size());
-		for(NodeV::iterator ni = order.begin(); ni!=order.end(); ++ni) {
-			double x = gd<DDNode>(*ni).cur.x;
-			x_backup[ni-order.begin()] = x;
-		}
+		for(NodeV::iterator ni = order.begin(); ni!=order.end(); ++ni)
+			x_backup[ni-order.begin()] = gd<DDNode>(*ni).cur.x;
 		check_backdup_x();
 	}
 	void check_backdup_x() {
-#ifndef NDEBUG
-		for(std::vector<double>::iterator xi = x_backup.begin(); xi!=x_backup.end(); ++xi)
-			if(xi!=x_backup.begin())
-				dgassert(*xi>=*(xi-1));
-#endif
+		dgassert(std::adjacent_find(x_backup.begin(),x_backup.end(),std::greater<double>())==x_backup.end());
 	}
 };
 

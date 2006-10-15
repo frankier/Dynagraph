@@ -82,6 +82,7 @@ struct IncrStrGraphHandler : IncrLangEvents {
 
     // IncrLangEvents
 	DString dinotype() { return "stringraph"; }
+	void incr_ev_shutdown();
 	void incr_ev_interrupt();
 	void incr_ev_open_graph(DString graph,const StrAttrs &attrs);
 	void incr_ev_close_graph();
@@ -125,6 +126,10 @@ void IncrStrGraphHandler<NGraph>::wait() {
 #endif
 }
 template<typename NGraph>
+void IncrStrGraphHandler<NGraph>::incr_ev_shutdown() {
+	wait();
+}
+template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_interrupt() {
 #ifdef STRHANDLER_DO_THREADS
 	if(layoutThread_) {
@@ -141,7 +146,7 @@ void IncrStrGraphHandler<NGraph>::incr_ev_open_graph(DString graph,const StrAttr
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_close_graph() {
 	maybe_go(&ChangeProcessor<NGraph>::Close);
-	wait(); // don't allow parent to delete me until i'm finished! (why thread then? foolish consistency?)
+	wait(); // don't allow parent to delete me until i'm finished! (why thread this cmd then? foolish consistency?)
 }
 template<typename NGraph>
 void IncrStrGraphHandler<NGraph>::incr_ev_mod_graph(const StrAttrs &attrs) {

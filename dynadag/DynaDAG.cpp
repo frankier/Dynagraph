@@ -429,21 +429,6 @@ void DynaDAGServer::generateIntermediateLayout(DDChangeQueue &changeQ) {
 	for(DynaDAGLayout::graphedge_iter ei = changeQ.modE.edges().begin(); ei!=changeQ.modE.edges().end(); ++ei)
 		drawEdgeSimply(DDp(*ei));
 }
-void DynaDAGServer::makeXConsistent() {
-	const double EPSILON = 1.0e-5; 
-	// if layout interrupted between untangle and x-position, model's x coordinates may not be ordered.
-	// fix that, so that next update doesn't get upset
-	for(Config::Ranks::iterator ri = config.ranking.begin(); ri!=config.ranking.end(); ++ri) {
-		Rank *r = *ri;
-		for(NodeV::iterator ni = r->order.begin(); ni!=r->order.end(); ++ni)
-			if(ni!=r->order.begin()) {
-				double &cx = gd<DDNode>(*ni).cur.x,
-					px = gd<DDNode>(*(ni-1)).cur.x;
-				if(cx<px)
-					cx = px + EPSILON;
-			}
-	}
-}
 void DynaDAGServer::rememberOld() { // dd_postprocess
 	for(DDModel::node_iter ni = model.nodes().begin(); ni!=model.nodes().end(); ++ni) {
 		DDNode &ddn = gd<DDNode>(*ni);
@@ -484,7 +469,14 @@ void ClearInsDel(DDChangeQueue &Q) {
 		Q.insE.erase(e);
 		ModifyEdge(Q,we,DG_UPD_MOVE);
 	}
-	Q.insE.clear();
+	Q.insE.clear(); // erase the nodes
+}
+void ClearStrAttrChanges(DDChangeQueue &Q) {
+	igd<StrAttrChanges>(Q.ModGraph()).clear();
+	for(DynaDAGLayout::node_iter ni = Q.modN.nodes().begin(); ni!=Q.modN.nodes().end(); ++ni) 
+		igd<StrAttrChanges>(*ni).clear();
+	for(DynaDAGLayout::graphedge_iter ei = Q.modE.edges().begin(); ei!=Q.modE.edges().end(); ++ei) 
+		igd<StrAttrChanges>(*ei).clear();
 }
 // again this seems like something any layout engine might want
 bool ChangesAreRelevant(DDChangeQueue &Q) {
@@ -535,6 +527,8 @@ void DynaDAGServer::Process() {
 		// client has heard about inserts so they're now mods, 
 		// and deletes can be blown away (should someone Higher do this?)
 		ClearInsDel(Q);
+		// and don't overreport attr changes
+		ClearStrAttrChanges(Q);
 	}
 
 	if(gd<Interruptible>(&world_->current_).interrupt 

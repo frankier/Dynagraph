@@ -58,7 +58,7 @@ void incr_shutdown() {
 	// wait for all layout threads to terminate
 	for(DinoMachine::node_iter ni = g_dinoMachine.nodes().begin(); ni!=g_dinoMachine.nodes().end(); ++ni)
 		if(gd<DinoMachNode>(*ni).handler)
-			gd<DinoMachNode>(*ni).handler->incr_ev_interrupt();
+			gd<DinoMachNode>(*ni).handler->incr_ev_shutdown();
 }
 void incr_open_graph(const char *graph) {
     DinoMachine::Node *n = g_dinoMachine.fetch_node(graph,true).first;
