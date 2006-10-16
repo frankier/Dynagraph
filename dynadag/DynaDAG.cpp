@@ -195,8 +195,7 @@ void DynaDAGServer::findChangedNodes(DDChangeQueue &changeQ) {
 			Position pos = DDp(*ni)->pos();
 			dgassert(pos.valid);
 			Position &p = gd<NodeGeom>(*ni).pos;
-			if(p != pos)
-			{
+			if(!is_vclose(p,pos)) {
 				if(p.valid) {
 					moved += (p-pos).Abs();
 					++nmoves;
