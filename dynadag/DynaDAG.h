@@ -87,6 +87,7 @@ private:
 	void findFlowSlopes(DDChangeQueue &changeQ);
 	bool edgeNeedsRedraw(DynaDAGLayout::Edge *e,DDChangeQueue &changeQ);
 	void redrawEdges(DDChangeQueue &changeQ,bool force);
+	void drawSecondEdges(DDChangeQueue &changeQ);
 	void generateIntermediateLayout(DDChangeQueue &changeQ);
 	void rememberOld();
 	void dumpModel();

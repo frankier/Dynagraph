@@ -93,10 +93,10 @@ void DynaDAGServer::drawStraightEdge(DynaDAGLayout::Edge *e) {
 	uncl.Clear();
 	const NodeGeom &tg = gd<NodeGeom>(e->tail),
 		&hg = gd<NodeGeom>(e->head);
-	const clipTail = eg.tailClipped, clipHead = eg.headClipped;
+	bool clipTail = eg.tailClipped, clipHead = eg.headClipped;
 	uncl.degree = 3;
-	Coord tp = gd<Suppression>(e).suppression==Suppression::tailSuppressed ? checkPos(cutPos(path)) : tg.pos,
-		hp = gd<Suppression>(e).suppression==Suppression::headSuppressed ? checkPos(cutPos(path)) : hg.pos;
+	Coord tp = checkPos(gd<Suppression>(e).suppression==Suppression::tailSuppressed ? cutPos(path) : tg.pos),
+		hp = checkPos(gd<Suppression>(e).suppression==Suppression::headSuppressed ? cutPos(path) : hg.pos);
 	uncl.push_back(tg.pos);
 	uncl.push_back((2.*tp+hp)/3.);
 	uncl.push_back((tp+2.*hp)/3.);
@@ -110,6 +110,17 @@ void DynaDAGServer::drawEdgeSimply(DynaDAGLayout::Edge *e) {
 		drawSelfEdge(e);
 	else
 		drawStraightEdge(e);
+}
+void DynaDAGServer::drawSecondEdges(DDChangeQueue &changeQ) {
+	for(DynaDAGLayout::graphedge_iter ei = world_->current_.edges().begin(); ei!=world_->current_.edges().end(); ++ei)
+		if(gd<NSRankerEdge>(*ei).secondOfTwo) {
+			Line before = gd<EdgeGeom>(*ei).pos;
+			Line &otherSide = gd<EdgeGeom>(world_->current_.find_edge((*ei)->head,(*ei)->tail)).pos;
+			gd<EdgeGeom>(*ei).pos.assign(otherSide.rbegin(),otherSide.rend());
+			gd<EdgeGeom>(*ei).pos.degree = otherSide.degree;
+			if(before!=gd<EdgeGeom>(*ei).pos)
+				ModifyEdge(changeQ,*ei,DG_UPD_MOVE);
+		}
 }
 
 void findFlowSlope(DDChangeQueue &Q,DynaDAGLayout::Node *cn) {
@@ -221,15 +232,7 @@ void DynaDAGServer::redrawEdges(DDChangeQueue &changeQ,bool force) {
 				ModifyEdge(changeQ,e,DG_UPD_MOVE);
 		}
 	}
-	for(DynaDAGLayout::graphedge_iter ei = world_->current_.edges().begin(); ei!=world_->current_.edges().end(); ++ei)
-		if(gd<NSRankerEdge>(*ei).secondOfTwo) {
-			Line before = gd<EdgeGeom>(*ei).pos;
-			Line &otherSide = gd<EdgeGeom>(world_->current_.find_edge((*ei)->head,(*ei)->tail)).pos;
-			gd<EdgeGeom>(*ei).pos.assign(otherSide.rbegin(),otherSide.rend());
-			gd<EdgeGeom>(*ei).pos.degree = otherSide.degree;
-			if(before!=gd<EdgeGeom>(*ei).pos)
-				ModifyEdge(changeQ,*ei,DG_UPD_MOVE);
-		}
+	drawSecondEdges(changeQ);
 }
 
 } // namespace DynaDAG
