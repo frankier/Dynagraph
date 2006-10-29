@@ -170,8 +170,8 @@ void RouteBounds::path(DDModel::Edge *e) {
 	appendQuad(tl,tr,hl,hr,ty,hy);
 }
 bool FlexiSpliner::MakeEdgeSpline(DDPath *path,SpliningLevel level) { //,ObstacleAvoiderSpliner<DynaDAGLayout> &obav) {
-	dgassert(path->unclippedPath.Empty());
-
+	Line &unclipped = path->unclippedPath;
+	unclipped.Clear();
 	DynaDAGLayout::Edge *e = path->layoutE;
 	EdgeGeom &eg = gd<EdgeGeom>(e);
 	EdgeDirection direction = getEdgeDirection(e);
@@ -189,6 +189,7 @@ bool FlexiSpliner::MakeEdgeSpline(DDPath *path,SpliningLevel level) { //,Obstacl
 			headpt;
 		if(gd<Suppression>(e).suppression==Suppression::tailSuppressed&&direction==forward
 			|| gd<Suppression>(e).suppression==Suppression::headSuppressed&&direction==reversed) {
+			/*
 			DDPath::edge_iter ei;
 			for(ei = path->eBegin(); ei!=path->eEnd(); ++ei)
 				if(!config.IsSuppressed(*ei)) {
@@ -196,11 +197,17 @@ bool FlexiSpliner::MakeEdgeSpline(DDPath *path,SpliningLevel level) { //,Obstacl
 					break;
 				}
 			dgassert(ei!=path->eEnd());
+			*/
+			tailpt = checkPos(cutPos(path));
+			double ehei = fabs(gd<DDNode>(cutNode(path)).cur.y - gd<DDNode>(path->last->head).cur.y),
+				limhei = gd<GraphGeom>(config.current).separation.y/3;
+			dgassert(ehei <= limhei);
 		}
 		else
 			tailpt = (direction==reversed?eg.tailPort:eg.headPort).pos + gd<DDNode>(tl).multi->pos();
 		if(gd<Suppression>(e).suppression==Suppression::headSuppressed&&direction==forward
 			|| gd<Suppression>(e).suppression==Suppression::tailSuppressed&&direction==reversed) {
+			/*
 			DDPath::edge_iter ei;
 			for(ei = path->eBegin(); ei!=path->eEnd(); ++ei)
 				if(config.IsSuppressed(*ei)) {
@@ -208,10 +215,14 @@ bool FlexiSpliner::MakeEdgeSpline(DDPath *path,SpliningLevel level) { //,Obstacl
 					break;
 				}
 			dgassert(ei!=path->eEnd());
+			*/
+			headpt = checkPos(cutPos(path));
+			double ehei = fabs(gd<DDNode>(cutNode(path)).cur.y - gd<DDNode>(path->first->tail).cur.y),
+				limhei = gd<GraphGeom>(config.current).separation.y/3;
+			dgassert(ehei <= limhei);
 		}
 		else
 			headpt = (direction==reversed?eg.headPort:eg.tailPort).pos + gd<DDNode>(hd).multi->pos();
-		Line &unclipped = path->unclippedPath;
 		Line region;
 		dgassert(e->tail!=e->head); // DynaDAGServer should draw self-edges
 		if(direction==flat) { // flat edge
@@ -257,10 +268,10 @@ bool FlexiSpliner::MakeEdgeSpline(DDPath *path,SpliningLevel level) { //,Obstacl
 						PathPlot::SegmentV barriers;
 						PathPlot::PolyBarriers(PathPlot::LineV(1,region),barriers);
 
-						//reports[dgr::error] << "message \"endslopes " << DDp(e->tail)->flowSlope << " " << DDp(e->head)->flowSlope << '"' << endl;
+						//reports[dgr::error] << "message \"endslopes " << gd<NodeGeom>(e->tail).flowTan << " " << gd<NodeGeom>(e->head).flowTan << '"' << endl;
 						Segment endSlopes(
-							gd<Suppression>(e).suppression==Suppression::tailSuppressed ? (tailpt - gd<NodeGeom>(e->tail).pos) : DDp(e->tail)->flowSlope,
-							gd<Suppression>(e).suppression==Suppression::headSuppressed ? (gd<NodeGeom>(e->head).pos - headpt) : DDp(e->head)->flowSlope
+							gd<Suppression>(e).suppression==Suppression::tailSuppressed ? (tailpt - gd<NodeGeom>(e->tail).pos) : gd<NodeGeom>(e->tail).flowTan,
+							gd<Suppression>(e).suppression==Suppression::headSuppressed ? (gd<NodeGeom>(e->head).pos - headpt) : gd<NodeGeom>(e->head).flowTan
 						);
 						if(direction==reversed) {
 							Coord t = endSlopes.b;
@@ -304,10 +315,10 @@ bool FlexiSpliner::MakeEdgeSpline(DDPath *path,SpliningLevel level) { //,Obstacl
 	NodeGeom &tg = gd<NodeGeom>(e->tail),
 		&hg = gd<NodeGeom>(e->head);
 	if(direction==reversed) 
-		eg.pos.ClipEndpoints(path->unclippedPath,hg.pos,eg.headClipped?&hg.region:0,
+		eg.pos.ClipEndpoints(unclipped,hg.pos,eg.headClipped?&hg.region:0,
 			tg.pos,eg.tailClipped?&tg.region:0);
 	else
-		eg.pos.ClipEndpoints(path->unclippedPath,tg.pos,eg.tailClipped?&tg.region:0,
+		eg.pos.ClipEndpoints(unclipped,tg.pos,eg.tailClipped?&tg.region:0,
 			hg.pos,eg.headClipped?&hg.region:0);
 	if((direction==reversed))
 		reverse(eg.pos.begin(),eg.pos.end());
@@ -316,4 +327,5 @@ bool FlexiSpliner::MakeEdgeSpline(DDPath *path,SpliningLevel level) { //,Obstacl
 
 } // namespace DynaDAG
 } // namespace Dynagraph
+
 

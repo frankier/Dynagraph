@@ -60,8 +60,7 @@ struct Chain {
 		edge_iter() {}
 	private:
 		edge_iter(Chain *chain,E *i) : chain(chain), i(i) {
-			if(i)
-				dgassert(i->head->g); // make sure valid pointer
+			dgassert(!i || i->head->g); // make sure valid pointer
 		}
 		E *i;
 	};
@@ -116,9 +115,8 @@ struct MultiNode : Chain<N,E> {
 	N *node;
 	DynaDAGLayout::Node *layoutN;
 	NodeConstraints xcon;
-	Coord flowSlope; // for flow nodes, the slope at which edges should enter/exit
 	//	coordFixed; // whether a good place in X has been found
-	MultiNode() : node(0),layoutN(0),flowSlope(0,0) /*,coordFixed(false)*/ {}
+	MultiNode() : node(0),layoutN(0) /*,coordFixed(false)*/ {}
 	struct node_iter {
 		N *operator *() {
 			switch(state) {
@@ -210,6 +208,21 @@ struct Path : Chain<N,E> {
 	Line unclippedPath;
 	Path() : layoutE(0) {}
 };
+
+inline DDModel::Node *cutNode(DDPath *path) {
+	Position ret;
+	int suppressRank = gd<Suppression>(path->layoutE).suppressRank;
+	for(DDPath::node_iter ni = path->nBegin(); ni!=path->nEnd(); ++ni) 
+		if(gd<DDNode>(*ni).rank==suppressRank) 
+			return *ni;
+	return 0;
+}
+inline Position cutPos(DDPath *path) {
+	Position ret;
+	if(DDModel::Node *n = cutNode(path))
+		ret = gd<DDNode>(n).cur;
+	return ret;
+}
 
 } // namespace Dynagraph
 } // namespace DynaDAG
