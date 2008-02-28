@@ -191,7 +191,7 @@ public:
 		sneaky[len] = c;
 		*/
 		char *copy = new char[len+1];
-		strncpy(copy,v,len);
+		std::copy(v,v+len,copy);
 		copy[len] = 0;
 		*this = copy;
 		delete [] copy;
