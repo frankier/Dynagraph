@@ -192,20 +192,17 @@ void Config::InstallAtOrder(DDModel::Node *n, int r, unsigned o) {
 	InstallAtOrder(n,r,o,CoordBetween(L,R));
 }
 struct XLess {
-	bool operator()(DDModel::Node *u,double x) {
-		return DDd(u).cur.x<x;
+	bool operator()(DDModel::Node *u,DDModel::Node *v) {
+		return DDd(u).cur.x < DDd(v).cur.x;
 	}
 };
-NodePair Config::NodesAround(int r,double x) {
+void Config::InstallAtPos(DDModel::Node *n, int r, double x) {
 	Rank *rank = *ranking.EnsureRank(r);
-	NodeV::iterator i = lower_bound(rank->order.begin(),rank->order.end(),x,XLess());
+	DDd(n).cur.x = x;
+	NodeV::iterator i = lower_bound(rank->order.begin(),rank->order.end(),n,XLess());
 	DDModel::Node *L = i==rank->order.begin()?0:*(i-1),
 		*R = i==rank->order.end()?0:*i;
-	return make_pair(L,R);
-}
-void Config::InstallAtPos(DDModel::Node *n, int r, double x) {
-	NodePair lr = NodesAround(r,x);
-	InstallAtOrder(n,r,lr.second?DDd(lr.second).order:lr.first?DDd(lr.first).order+1:0,x);
+	InstallAtOrder(n,r,R?DDd(R).order:L?DDd(L).order+1:0,x);
 }
 void Config::Exchange(DDModel::Node *u, DDModel::Node *v) {
 	DDNode &ddu = DDd(u),

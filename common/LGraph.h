@@ -80,12 +80,12 @@ inline D &gd(LGraph<ADT,GD,ND,ED,GID,NID,EID> *g) {
 */
 template<typename D,typename GO>
 inline D &gd(GO *go) {
-	return static_cast<D&>(*go->dat);
+	return *static_cast<D*>(go->dat);
 }
 // extracts instance-specific datum by type
 template<typename D,typename GO>
 inline D &igd(GO *go) {
-	return static_cast<D&>(go->idat);
+	return *static_cast<D*>(&go->idat);
 }
 
 // LGraph graphs, nodes, and edges carry data that has been aggregated using

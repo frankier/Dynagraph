@@ -142,7 +142,7 @@
 				Optimization="0"
 				InlineFunctionExpansion="0"
 				AdditionalIncludeDirectories="..;../../graphviz/lib/agraph;../../graphviz/lib/cdt;../../fauxunix; ../boost"
-				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE,WIN32,_DEBUG,_CONSOLE"
+				PreprocessorDefinitions="_SCL_SECURE_NO_DEPRECATE, _CRT_SECURE_NO_DEPRECATE,WIN32,_DEBUG,_CONSOLE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="2"
 				PrecompiledHeaderFile="debug\graphsearch/graphsearch.pch"
