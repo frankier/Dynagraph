@@ -28,7 +28,9 @@ extern "C" {
 
 using namespace std;
 
-ObstacleAvoiderSpliner::ObstacleAvoiderSpliner(Layout *layout) {
+ObstacleAvoiderSpliner::ObstacleAvoiderSpliner(Layout *layout) 
+	: vconfig(0)
+{
 	int N = 0;
 	for(Layout::node_iter ni = layout->nodes().begin(); ni!=layout->nodes().end(); ++ni)
 		if(gd<NodeGeom>(*ni).region.shape.size())
@@ -48,12 +50,13 @@ ObstacleAvoiderSpliner::ObstacleAvoiderSpliner(Layout *layout) {
 		++i;
 	}
 	assert(i==N);
-	if (!Plegal_arrangement(&*obs.begin(),N)) {
-		//if (Verbose) fprintf(stderr,"nodes touch - falling back to straight line edges\n");
-		vconfig = 0;
-	}
-	else
-		vconfig = Pobsopen(&*obs.begin(),N);
+	if(N)
+		if (!Plegal_arrangement(&*obs.begin(),N)) {
+			//if (Verbose) fprintf(stderr,"nodes touch - falling back to straight line edges\n");
+			vconfig = 0;
+		}
+		else
+			vconfig = Pobsopen(&*obs.begin(),N);
 }
 void ObstacleAvoiderSpliner::FindSpline(Coord a,Coord b,Line &ret) {
 	if(!vconfig)
