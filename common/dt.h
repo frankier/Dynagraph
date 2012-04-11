@@ -20,6 +20,7 @@
 
 extern "C" {
 #include "cdt.h"
+#include "string.h"
 }
 
 namespace cdt {

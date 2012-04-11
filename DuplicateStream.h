@@ -21,6 +21,7 @@
 #include <boost/thread/xtime.hpp>
 #include <boost/bind.hpp>
 #include <fcntl.h>
+#include <stdio.h>
 #ifdef WIN32
 #include <io.h>
 inline void pipe(int fd[2]) {
