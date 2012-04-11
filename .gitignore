@@ -1,0 +1,11 @@
+*.o
+*.a
+.deps
+Makefile
+/dynagraph
+/dynagraph-whole
+/gengraph
+/incrface/incrscan.cpp
+/incrface/incrgram.cpp
+/incrface/incrgram.h
+/incrface/incrgram.output

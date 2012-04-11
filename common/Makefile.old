@@ -5,6 +5,7 @@ include $(ROOT)/Config.mk
 include $(ROOT)/makearch/$(ARCH)
 
 INCS =	-I.. -I../.. \
+    -I../hackinclude \
 	-I$(GRAPHVIZ_INC) 
 
 DEFINES = -DHAVE_CONFIG_H
