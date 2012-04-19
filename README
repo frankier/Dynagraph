@@ -1,0 +1,15 @@
+Dynagraph
+(that builds with newer versions of Graphviz)
+
+Requirements:
+graphviz
+boost_thread
+probably some other stuff
+
+To build on Linux:
+If you're not on a 64 bit system edit Config.mk to set ARCH=linux.i386
+$ ./configure.old
+$ make
+
+TODO:
+Maybe clean things up a little bit.
