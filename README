@@ -1,9 +1,10 @@
-Dynagraph
-(that builds with newer versions of Graphviz)
+Dynagraph (orginally from: http://www.dynagraph.org/)
+(But this one builds with newer versions of Graphviz)
 
 Requirements:
 graphviz
 boost_thread
+flex & bison
 probably some other stuff
 
 To build on Linux:
